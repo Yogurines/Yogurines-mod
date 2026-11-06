@@ -1,5 +1,6 @@
 package com.yogurines.mod.data;
 
+import com.yogurines.mod.Tr;
 import com.yogurines.mod.item.Money;
 import com.yogurines.mod.item.MoneyItem;
 import com.yogurines.mod.item.WalletItem;
@@ -117,7 +118,7 @@ public final class ServerLogic {
                 d.posts.add(post);
                 d.setDirty();
                 broadcastSnap();
-                for (UUID f : followersOf(me)) notify(f, "social", "@" + name(me), "ha publicado una foto nueva");
+                for (UUID f : followersOf(me)) notifyFrom(f, me, "social", "@" + name(me), Tr.of("ha publicado una foto nueva"));
                 FakeProfiles.onPlayerPost(post);
             }
             case "like" -> {
@@ -125,7 +126,7 @@ public final class ServerLogic {
                 if (post == null) return;
                 if (!post.likes.remove(me)) {
                     post.likes.add(me);
-                    if (!post.author.equals(me)) notify(post.author, "social", "@" + name(me), "le ha dado like a tu foto");
+                    if (!post.author.equals(me)) notifyFrom(post.author, me, "social", "@" + name(me), Tr.of("le ha dado like a tu foto"));
                 }
                 d.setDirty();
                 broadcastSnap();
@@ -139,14 +140,14 @@ public final class ServerLogic {
                 post.comments.add(c);
                 d.setDirty();
                 broadcastSnap();
-                if (!post.author.equals(me)) notify(post.author, "social", "@" + name(me), "ha comentado: \"" + text + "\"");
+                if (!post.author.equals(me)) notifyFrom(post.author, me, "social", "@" + name(me), Tr.of("ha comentado: \"%s\"", text));
             }
             case "follow" -> {
                 UUID other = uuid(t.getString("u"));
                 if (other == null || other.equals(me)) return;
                 YoguData.Profile pr = d.profile(me);
                 if (t.getBoolean("on")) {
-                    if (pr.following.add(other)) notify(other, "social", "@" + name(me), "ha empezado a seguirte");
+                    if (pr.following.add(other)) notifyFrom(other, me, "social", "@" + name(me), Tr.of("ha empezado a seguirte"));
                 } else pr.following.remove(other);
                 d.setDirty();
                 broadcastSnap();
@@ -155,11 +156,13 @@ public final class ServerLogic {
                 UUID other = uuid(t.getString("to"));
                 String text = clean(t.getString("x"), 200);
                 if (other == null || text.isEmpty() || !d.names.containsKey(other)) return;
+                if (d.profile(me).blocked.contains(other)) { err(p, Tr.of("Has bloqueado a esta persona")); return; }
+                if (d.profile(other).blocked.contains(me)) { err(p, Tr.of("No puedes escribir a esta persona")); return; }
                 d.addChat(me, other, text, "text");
                 sendSnap(p);
                 ServerPlayer op = online(other);
                 if (op != null) sendSnap(op);
-                notify(other, "chat", "@" + name(me), text);
+                notifyFrom(other, me, "chat", "@" + name(me), text);
                 if (d.fakes.contains(other)) FakeProfiles.onMessage(other, me, text);
             }
             case "transfer" -> {
@@ -180,6 +183,21 @@ public final class ServerLogic {
                 o.putString("u", me.toString());
                 o.putInt("m", mode);
                 Net.toAll("pose", o);
+            }
+            case "mute", "block" -> {
+                UUID other = uuid(t.getString("u"));
+                if (other == null || other.equals(me)) return;
+                Set<UUID> set = type.equals("mute") ? d.profile(me).muted : d.profile(me).blocked;
+                if (t.getBoolean("on")) set.add(other); else set.remove(other);
+                d.setDirty();
+                sendSnap(p);
+                ServerPlayer op = online(other);
+                if (op != null) sendSnap(op);
+            }
+            case "bank_clear" -> {
+                d.history.remove(me);
+                d.setDirty();
+                sendSnap(p);
             }
             case "atm_all" -> atmDepositAll(p);
             case "atm_take" -> atmWithdraw(p, t.getLong("v"));
@@ -228,7 +246,7 @@ public final class ServerLogic {
         UUID me = p.getUUID();
         if (other == null || other.equals(me) || !d.names.containsKey(other) || amount <= 0 || amount > d.bal(me)) {
             CompoundTag o = new CompoundTag();
-            o.putString("r", amount > d.bal(me) ? "Saldo insuficiente" : "No se ha podido enviar");
+            o.putString("r", amount > d.bal(me) ? Tr.of("Saldo insuficiente") : Tr.of("No se ha podido enviar"));
             Net.toPlayer(p, "bank_err", o);
             return;
         }
@@ -241,7 +259,7 @@ public final class ServerLogic {
         CompoundTag fx = new CompoundTag();
         fx.putString("k", "sent");
         Net.toPlayer(p, "fx", fx);
-        notify(other, "bank", "Banco Yogurín", "@" + name(me) + " te ha enviado " + Money.fmt(amount) + " Y");
+        notifyFrom(other, me, "bank", Tr.of("Banco Yogurín"), Tr.of("@%s te ha enviado %s Y", name(me), Money.fmt(amount)));
         if (d.fakes.contains(other)) FakeProfiles.onTransfer(other, me, amount);
     }
 
@@ -249,7 +267,7 @@ public final class ServerLogic {
     public static void deposit(ServerPlayer p, long amount, int notes, int coins) {
         if (amount <= 0) return;
         YoguData d = data();
-        d.addTx(p.getUUID(), amount, "", "Ingreso en cajero");
+        d.addTx(p.getUUID(), amount, "", Tr.of("Ingreso en cajero"));
         sendSnap(p);
         CompoundTag fx = new CompoundTag();
         fx.putString("k", "deposit");
@@ -302,11 +320,11 @@ public final class ServerLogic {
         YoguData d = data();
         if (amount <= 0 || amount > d.bal(p.getUUID()) || amount > 100_000) {
             CompoundTag o = new CompoundTag();
-            o.putString("r", amount > d.bal(p.getUUID()) ? "Saldo insuficiente" : "Cantidad no válida");
+            o.putString("r", amount > d.bal(p.getUUID()) ? Tr.of("Saldo insuficiente") : Tr.of("Cantidad no válida"));
             Net.toPlayer(p, "bank_err", o);
             return;
         }
-        d.addTx(p.getUUID(), -amount, "", "Retirada en cajero");
+        d.addTx(p.getUUID(), -amount, "", Tr.of("Retirada en cajero"));
         Money.give(p, amount);
         sendSnap(p);
         int[] parts = Money.breakdown(amount);
@@ -365,6 +383,19 @@ public final class ServerLogic {
 
     // ---------- avisos y sincronización ----------
 
+    /** Aviso de algo que ha hecho otra persona: no llega si la tienes silenciada o bloqueada. */
+    public static void notifyFrom(UUID to, UUID from, String app, String title, String text) {
+        YoguData.Profile pr = data().profiles.get(to);
+        if (pr != null && (pr.muted.contains(from) || pr.blocked.contains(from))) return;
+        notify(to, app, title, text);
+    }
+
+    public static void err(ServerPlayer p, String text) {
+        CompoundTag o = new CompoundTag();
+        o.putString("r", text);
+        Net.toPlayer(p, "err", o);
+    }
+
     public static void notify(UUID to, String app, String title, String text) {
         ServerPlayer p = online(to);
         if (p == null) return;
@@ -418,6 +449,10 @@ public final class ServerLogic {
             t.putString("a", pr != null ? pr.avatar : "");
             t.putBoolean("c", pr != null && pr.created);
             t.putBoolean("fake", d.fakes.contains(u));
+            YoguData.Profile mine0 = d.profiles.get(me);
+            t.putBoolean("mu", mine0 != null && mine0.muted.contains(u));
+            t.putBoolean("bl", mine0 != null && mine0.blocked.contains(u));
+            t.putBoolean("bm", pr != null && pr.blocked.contains(me));
             t.putBoolean("on", d.fakes.contains(u) || online(u) != null);
             ListTag f = new ListTag();
             if (pr != null) for (UUID x : pr.following) f.add(StringTag.valueOf(x.toString()));

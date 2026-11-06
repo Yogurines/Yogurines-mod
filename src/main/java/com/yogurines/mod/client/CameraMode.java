@@ -55,7 +55,7 @@ public final class CameraMode {
         capture = false;
         mc.options.setCameraType(previous == null ? CameraType.FIRST_PERSON : previous);
         sendMode();
-        if (backToPhone) ClientHooks.openPhoneAt(PhoneScreen.Page.GALLERY);
+        if (backToPhone) ClientHooks.openPhoneAt(PhoneScreen.Page.HOME);
     }
 
     private static void sendMode() {
@@ -167,13 +167,13 @@ public final class CameraMode {
         g.fill(sw / 2 - 4, sh / 2, sw / 2 + 5, sh / 2 + 1, 0x88FFFFFF);
         g.fill(sw / 2, sh / 2 - 4, sw / 2 + 1, sh / 2 + 5, 0x88FFFFFF);
         // modo y zoom arriba
-        String mode = selfie ? "SELFIE" : "FOTO";
+        String mode = selfie ? L.t("Selfie").toUpperCase(java.util.Locale.ROOT) : L.t("Foto").toUpperCase(java.util.Locale.ROOT);
         int mw = font.width(mode) + 10;
         Toasts.card(g, sw / 2 - mw / 2, m, mw, 13, 0x99000000);
         g.drawString(font, mode, sw / 2 - mw / 2 + 5, m + 3, 0xFFFFD84A, false);
         String z = String.format("%.1fx", zoom);
         g.drawString(font, z, sw - m - 6 - font.width(z), m + 6, 0xFFFFFFFF, true);
-        // punto rojo "REC" de cámara
+        // punto rojo REC de cámara
         g.fill(m + 6, m + 6, m + 10, m + 10, 0xFFFF4040);
         // guía
         g.pose().pushPose();
@@ -182,13 +182,13 @@ public final class CameraMode {
         int gx = Math.round((m + 4) / s), gy;
         if (guideHidden) {
             gy = Math.round((sh - m - 14) / s);
-            Toasts.card(g, gx, gy, font.width("H  Mostrar controles") + 10, 13, 0x88000000);
+            Toasts.card(g, gx, gy, font.width("H  " + L.t("Mostrar controles")) + 10, 13, 0x88000000);
             g.drawString(font, "H", gx + 5, gy + 3, 0xFFFFD84A, false);
-            g.drawString(font, "Mostrar controles", gx + 5 + font.width("H  "), gy + 3, 0xFFFFFFFF, false);
+            g.drawString(font, L.t("Mostrar controles"), gx + 5 + font.width("H  "), gy + 3, 0xFFFFFFFF, false);
         } else {
             String[][] rows = selfie
-                    ? new String[][]{{"Clic dcho", "Foto"}, {"Clic izq", "Cámara normal"}, {"Rueda", "Zoom"}, {"Flechas", "Mover encuadre"}, {"H", "Ocultar guía"}, {"Esc", "Salir"}}
-                    : new String[][]{{"Clic dcho", "Foto"}, {"Clic izq", "Selfie"}, {"Rueda", "Zoom"}, {"H", "Ocultar guía"}, {"Esc", "Salir"}};
+                    ? new String[][]{{L.t("Clic dcho"), L.t("Foto")}, {L.t("Clic izq"), L.t("Cámara normal")}, {L.t("Rueda"), L.t("Zoom")}, {L.t("Flechas"), L.t("Mover encuadre")}, {"H", L.t("Ocultar guía")}, {L.t("Esc"), L.t("Salir")}}
+                    : new String[][]{{L.t("Clic dcho"), L.t("Foto")}, {L.t("Clic izq"), L.t("Selfie")}, {L.t("Rueda"), L.t("Zoom")}, {"H", L.t("Ocultar guía")}, {L.t("Esc"), L.t("Salir")}};
             int kw = 0, vw = 0;
             for (String[] r : rows) { kw = Math.max(kw, font.width(r[0])); vw = Math.max(vw, font.width(r[1])); }
             int bw = kw + vw + 18, bh = rows.length * 11 + 6;
@@ -209,7 +209,7 @@ public final class CameraMode {
             g.fill(0, 0, sw, sh, (a << 24) | 0xFFFFFF);
         }
         if (now - savedMsg < 1800) {
-            String t = "Guardada en la galería";
+            String t = L.t("Guardada en la galería");
             int tw = font.width(t) + 12;
             Toasts.card(g, sw / 2 - tw / 2, sh - 40, tw, 14, 0xAA000000);
             g.drawString(font, t, sw / 2 - tw / 2 + 6, sh - 37, 0xFFFFFFFF, false);

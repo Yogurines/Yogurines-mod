@@ -14,7 +14,7 @@ import java.util.*;
 public final class ClientData {
     public static class User {
         public UUID id; public String nick = "", display = "", bio = "", avatar = "";
-        public boolean created, fake, online;
+        public boolean created, fake, online, muted, blocked, blockedMe;
         public final Set<UUID> following = new HashSet<>();
     }
 
@@ -56,7 +56,7 @@ public final class ClientData {
         for (int i = 0; i < h.size(); i++) {
             CompoundTag t = h.getCompound(i);
             Tx x = new Tx();
-            x.time = t.getLong("t"); x.amount = t.getLong("v"); x.other = t.getString("o"); x.concept = t.getString("c");
+            x.time = t.getLong("t"); x.amount = t.getLong("v"); x.other = t.getString("o"); x.concept = L.tr(t.getString("c"));
             history.add(x);
         }
         users.clear();
@@ -66,8 +66,9 @@ public final class ClientData {
             User u = new User();
             u.id = uuid(t.getString("u"));
             if (u.id == null) continue;
-            u.nick = t.getString("n"); u.display = t.getString("d"); u.bio = t.getString("b"); u.avatar = t.getString("a");
+            u.nick = t.getString("n"); u.display = L.tr(t.getString("d")); u.bio = L.tr(t.getString("b")); u.avatar = t.getString("a");
             u.created = t.getBoolean("c"); u.fake = t.getBoolean("fake"); u.online = t.getBoolean("on");
+            u.muted = t.getBoolean("mu"); u.blocked = t.getBoolean("bl"); u.blockedMe = t.getBoolean("bm");
             ListTag f = t.getList("f", Tag.TAG_STRING);
             for (int k = 0; k < f.size(); k++) { UUID x = uuid(f.getString(k)); if (x != null) u.following.add(x); }
             users.put(u.id, u);
@@ -78,14 +79,14 @@ public final class ClientData {
             CompoundTag t = ps.getCompound(i);
             Post p = new Post();
             p.id = t.getInt("id"); p.author = uuid(t.getString("a")); p.img = t.getString("img");
-            p.caption = t.getString("cap"); p.time = t.getLong("t");
+            p.caption = L.tr(t.getString("cap")); p.time = t.getLong("t");
             ListTag l = t.getList("likes", Tag.TAG_STRING);
             for (int k = 0; k < l.size(); k++) { UUID x = uuid(l.getString(k)); if (x != null) p.likes.add(x); }
             ListTag c = t.getList("com", Tag.TAG_COMPOUND);
             for (int k = 0; k < c.size(); k++) {
                 CompoundTag ct = c.getCompound(k);
                 Comment cm = new Comment();
-                cm.author = uuid(ct.getString("a")); cm.text = ct.getString("x"); cm.time = ct.getLong("t");
+                cm.author = uuid(ct.getString("a")); cm.text = L.tr(ct.getString("x")); cm.time = ct.getLong("t");
                 p.comments.add(cm);
             }
             if (p.author != null) posts.add(p);
@@ -101,7 +102,7 @@ public final class ClientData {
             for (int i = 0; i < lt.size(); i++) {
                 CompoundTag t = lt.getCompound(i);
                 Msg m = new Msg();
-                m.from = uuid(t.getString("f")); m.text = t.getString("x"); m.time = t.getLong("t"); m.kind = t.getString("k");
+                m.from = uuid(t.getString("f")); m.text = L.tr(t.getString("x")); m.time = t.getLong("t"); m.kind = t.getString("k");
                 l.add(m);
             }
             chats.put(other, l);

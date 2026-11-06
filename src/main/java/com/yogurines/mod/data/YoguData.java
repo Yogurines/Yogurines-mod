@@ -19,6 +19,8 @@ public class YoguData extends SavedData {
         public String avatar = "";
         public boolean created;
         public final Set<UUID> following = new LinkedHashSet<>();
+        public final Set<UUID> muted = new HashSet<>();
+        public final Set<UUID> blocked = new HashSet<>();
     }
 
     public static class Comment {
@@ -125,6 +127,8 @@ public class YoguData extends SavedData {
             CompoundTag t = new CompoundTag();
             t.putString("d", p.display); t.putString("b", p.bio); t.putString("a", p.avatar); t.putBoolean("c", p.created);
             t.put("f", uuids(p.following));
+            t.put("mu", uuids(p.muted));
+            t.put("bl", uuids(p.blocked));
             pr.put(u.toString(), t);
         });
         tag.put("profiles", pr);
@@ -192,6 +196,8 @@ public class YoguData extends SavedData {
             Profile p = new Profile();
             p.display = t.getString("d"); p.bio = t.getString("b"); p.avatar = t.getString("a"); p.created = t.getBoolean("c");
             readUuids(t.getList("f", Tag.TAG_STRING), p.following);
+            readUuids(t.getList("mu", Tag.TAG_STRING), p.muted);
+            readUuids(t.getList("bl", Tag.TAG_STRING), p.blocked);
             d.profiles.put(UUID.fromString(k), p);
         }
         ListTag ps = tag.getList("posts", Tag.TAG_COMPOUND);

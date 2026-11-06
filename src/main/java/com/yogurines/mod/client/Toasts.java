@@ -51,8 +51,8 @@ public final class Toasts {
         return switch (app) {
             case "chat" -> "YoguChat";
             case "social" -> "Yogugram";
-            case "bank" -> "Banco Yogurín";
-            default -> "Móvil";
+            case "bank" -> L.t("Banco Yogurín");
+            default -> L.t("Móvil");
         };
     }
 
@@ -78,7 +78,8 @@ public final class Toasts {
             g.drawString(font, appLetter(t.app), x + 9, y + 8, 0xFFFFFFFF, false);
             String head = font.plainSubstrByWidth(t.title, W - 70);
             g.drawString(font, head, x + 23, y + 5, 0xFFFFFFFF, false);
-            g.drawString(font, Component.literal("ahora"), x + W - 6 - font.width("ahora"), y + 5, 0xFF8A8F9C, false);
+            String now0 = L.t("ahora");
+            g.drawString(font, now0, x + W - 6 - font.width(now0), y + 5, 0xFF8A8F9C, false);
             g.drawString(font, Component.literal(appName(t.app)), x + 23, y + 14, 0xFF8A8F9C, false);
             int ly = y + 24;
             for (FormattedCharSequence l : lines) {

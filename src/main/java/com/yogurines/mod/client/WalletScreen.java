@@ -21,7 +21,7 @@ public class WalletScreen extends PixelScreen {
     private boolean opened;
 
     public WalletScreen(InteractionHand hand) {
-        super("Cartera");
+        super(L.t("Cartera"));
         this.hand = hand;
     }
 
@@ -61,8 +61,8 @@ public class WalletScreen extends PixelScreen {
         if (!(w.getItem() instanceof WalletItem)) { onClose(); return; }
         int[] c = WalletItem.counts(w);
         tex(BG, 0, 0, 200, 120, 200, 120);
-        textScaled("BILLETES", 10, 9, 0.5f, 0xFFE9D3B0, false);
-        textScaled("MONEDAS", 110, 9, 0.5f, 0xFFE9D3B0, false);
+        textScaled(L.t("BILLETES"), 10, 9, 0.5f, 0xFFE9D3B0, false);
+        textScaled(L.t("MONEDAS"), 110, 9, 0.5f, 0xFFE9D3B0, false);
         for (int i = 0; i < 7; i++) {
             int[] p = pocket(i);
             int n = c[i + 1];
@@ -84,20 +84,20 @@ public class WalletScreen extends PixelScreen {
         for (int k = 0; k < Math.min(c[0], 6); k++) {
             tex(COIN, 118 + k * 9, 22 + (k % 2) * 2 - (hoverCoin ? 1 : 0), 16, 16, 16, 16);
         }
-        if (c[0] == 0) textScaled("vacío", 149, 28, 0.5f, 0x99C9B497, true);
+        if (c[0] == 0) textScaled(L.t("vacío"), 149, 28, 0.5f, 0x99C9B497, true);
         tex(FLAP, 110, 40, 78, 18, 78, 18);
-        textScaled("Monedas de 1 Y", 115, 46, 0.5f, 0xFFF4E4C8, false);
+        textScaled(L.t("Monedas de 1 Y"), 115, 46, 0.5f, 0xFFF4E4C8, false);
         String cc = "x" + c[0];
         textScaled(cc, 183 - font.width(cc) * 0.5f, 46, 0.5f, c[0] > 0 ? 0xFFFFE08A : 0x99C9B497, false);
         // total
-        textScaled("TOTAL", 114, 74, 0.5f, 0xFFE9D3B0, false);
+        textScaled(L.t("TOTAL"), 114, 74, 0.5f, 0xFFE9D3B0, false);
         String total = Money.fmt(WalletItem.total(w)) + " Y";
         textScaled(total, 149, 84, total.length() > 9 ? 0.75f : 1f, 0xFFFFE08A, true);
         // botones bajo la cartera
         boolean hs = in(mx, my, 40, 124, 120, 14);
         round(40, 124, 120, 14, 3, hs ? 0xFF7A4A28 : 0xFF5E3820);
-        center("Guardar todo", 100, 127, 0xFFF4E4C8);
-        textScaled("Clic: sacar 1   ·   Mayús + clic: sacar todos", 100, 140, 0.5f, 0xFFD8D8D8, true);
+        center(L.t("Guardar todo"), 100, 127, 0xFFF4E4C8);
+        textScaled(L.t("Clic: sacar 1   ·   Mayús + clic: sacar todos"), 100, 140, 0.5f, 0xFFD8D8D8, true);
     }
 
     @Override

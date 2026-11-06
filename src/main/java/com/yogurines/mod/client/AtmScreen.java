@@ -13,7 +13,7 @@ public class AtmScreen extends PixelScreen {
     private String amount = "";
 
     public AtmScreen() {
-        super("Cajero");
+        super(L.t("Cajero"));
     }
 
     public static void flash(String t) {
@@ -40,15 +40,15 @@ public class AtmScreen extends PixelScreen {
         gradient(4, 4, 152, 222, 0xFFB7C0C8, 0xFF7E8790);
         // franja verde con el nombre
         round(8, 8, 144, 16, 3, 0xFF1F8A4C);
-        center("BANCO YOGURÍN", 80, 12, 0xFFFFFFFF);
+        center(L.t("Banco Yogurín").toUpperCase(java.util.Locale.ROOT), 80, 12, 0xFFFFFFFF);
         // pantalla
         round(12, 30, 136, 72, 3, 0xFF0D1410);
         rect(14, 32, 132, 68, 0xFF10261A);
-        textScaled("SALDO", 20, 37, 0.5f, 0xFF7FE0A4, false);
+        textScaled(L.t("Saldo").toUpperCase(java.util.Locale.ROOT), 20, 37, 0.5f, 0xFF7FE0A4, false);
         String bal = Money.fmt(ClientData.balance) + " Y";
         textScaled(bal, 80, 44, bal.length() > 10 ? 1f : 1.5f, 0xFFB8FFD1, true);
         rect(20, 60, 120, 1, 0x553FD17A);
-        textScaled("RETIRAR", 20, 64, 0.5f, 0xFF7FE0A4, false);
+        textScaled(L.t("RETIRAR"), 20, 64, 0.5f, 0xFF7FE0A4, false);
         String a = (amount.isEmpty() ? "0" : Money.fmt(Long.parseLong(amount))) + " Y";
         boolean blink = (System.currentTimeMillis() / 500) % 2 == 0;
         text(a + (blink ? "_" : ""), 20, 71, 0xFFFFFFFF);
@@ -58,7 +58,7 @@ public class AtmScreen extends PixelScreen {
         if (now - ClientData.bankErrorTime < 2500) { msg = ClientData.bankError; mc = 0xFFFF7A7A; }
         else if (now - flashTime < 2500) msg = flashText;
         if (!msg.isEmpty()) textScaled(fit(msg, 240), 80, 88, 0.5f, mc, true);
-        else textScaled("Teclea una cantidad y pulsa OK", 80, 88, 0.5f, 0xFF4E9A6C, true);
+        else textScaled(L.t("Teclea una cantidad y pulsa OK"), 80, 88, 0.5f, 0xFF4E9A6C, true);
         // cantidades rápidas
         for (int i = 0; i < 4; i++) {
             int x = 12 + i * 35, y = 106;
@@ -79,9 +79,9 @@ public class AtmScreen extends PixelScreen {
         // ingresar todo
         boolean hd = in(mx, my, 12, 210, 136, 14);
         round(12, 210, 136, 14, 3, hd ? 0xFF2BA35E : 0xFF1F8A4C);
-        center("Ingresar todo mi dinero", 80, 213, 0xFFFFFFFF);
+        center(L.t("Ingresar todo mi dinero"), 80, 213, 0xFFFFFFFF);
         if (ClientData.synced && !ClientData.users.isEmpty()) return;
-        textScaled("Conectando…", 80, 52, 0.5f, 0xFF7FE0A4, true);
+        textScaled(L.t("Conectando…"), 80, 52, 0.5f, 0xFF7FE0A4, true);
     }
 
     private static int brighten(int c) {
