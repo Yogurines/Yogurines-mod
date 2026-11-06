@@ -16,6 +16,7 @@ public final class ModCreativeTabs {
             .icon(() -> new ItemStack(ModItems.PHONE.get()))
             .displayItems((params, output) -> {
                 output.accept(ModItems.PHONE.get());
+                output.accept(ModItems.WALLET.get());
                 output.accept(ModItems.ATM.get());
                 ModItems.MONEY.forEach(item -> output.accept(item.get()));
             })

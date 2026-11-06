@@ -2,7 +2,13 @@ package com.yogurines.mod.block;
 
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
-import net.minecraft.network.chat.Component;
+import com.yogurines.mod.client.ClientHooks;
+import com.yogurines.mod.data.ServerLogic;
+import com.yogurines.mod.item.MoneyItem;
+import com.yogurines.mod.item.WalletItem;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -119,8 +125,15 @@ public class AtmBlock extends HorizontalDirectionalBlock {
 
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
+        ItemStack held = player.getItemInHand(hand);
+        boolean money = held.getItem() instanceof MoneyItem || held.getItem() instanceof WalletItem;
+        if (hand == InteractionHand.OFF_HAND && !money) return InteractionResult.PASS;
+        if (money) {
+            if (!level.isClientSide && player instanceof ServerPlayer sp) ServerLogic.depositHand(sp, hand);
+            return InteractionResult.sidedSuccess(level.isClientSide);
+        }
         if (level.isClientSide) {
-            player.displayClientMessage(Component.translatable("block.yogurines.atm.soon"), true);
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientHooks::openAtm);
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

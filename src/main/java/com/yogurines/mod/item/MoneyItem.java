@@ -9,6 +9,8 @@ import net.minecraft.world.level.Level;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Optional;
+import net.minecraft.world.inventory.tooltip.TooltipComponent;
 
 /** Moneda o billete de yogurines con un valor fijo. */
 public class MoneyItem extends Item {
@@ -21,6 +23,11 @@ public class MoneyItem extends Item {
 
     public int getValue() {
         return value;
+    }
+
+    @Override
+    public Optional<TooltipComponent> getTooltipImage(ItemStack stack) {
+        return value > 1 ? Optional.of(new NoteTooltip(value)) : Optional.empty();
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.yogurines.mod.registry;
 import com.yogurines.mod.Yogurines;
 import com.yogurines.mod.item.MoneyItem;
 import com.yogurines.mod.item.PhoneItem;
+import com.yogurines.mod.item.WalletItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -17,6 +18,9 @@ public final class ModItems {
 
     public static final RegistryObject<Item> PHONE = ITEMS.register("phone",
             () -> new PhoneItem(new Item.Properties().stacksTo(1)));
+
+    public static final RegistryObject<Item> WALLET = ITEMS.register("wallet",
+            () -> new WalletItem(new Item.Properties().stacksTo(1)));
 
     public static final RegistryObject<Item> ATM = ITEMS.register("atm",
             () -> new BlockItem(ModBlocks.ATM.get(), new Item.Properties()));

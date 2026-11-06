@@ -10,5 +10,83 @@
     "sounds": [
       "yogurines:bank/transfer_sent"
     ]
+  },
+  "phone.shutter": {
+    "subtitle": "subtitles.yogurines.phone.shutter",
+    "sounds": [
+      "yogurines:phone/shutter"
+    ]
+  },
+  "phone.like": {
+    "subtitle": "subtitles.yogurines.phone.like",
+    "sounds": [
+      "yogurines:phone/like"
+    ]
+  },
+  "phone.tap": {
+    "subtitle": "subtitles.yogurines.phone.tap",
+    "sounds": [
+      "yogurines:phone/tap"
+    ]
+  },
+  "phone.open": {
+    "subtitle": "subtitles.yogurines.phone.open",
+    "sounds": [
+      "yogurines:phone/open"
+    ]
+  },
+  "atm.key": {
+    "subtitle": "subtitles.yogurines.atm.key",
+    "sounds": [
+      "yogurines:atm/key"
+    ]
+  },
+  "atm.ok": {
+    "subtitle": "subtitles.yogurines.atm.ok",
+    "sounds": [
+      "yogurines:atm/ok"
+    ]
+  },
+  "atm.bill": {
+    "subtitle": "subtitles.yogurines.atm.bill",
+    "sounds": [
+      "yogurines:atm/bill"
+    ]
+  },
+  "atm.coin": {
+    "subtitle": "subtitles.yogurines.atm.coin",
+    "sounds": [
+      "yogurines:atm/coin"
+    ]
+  },
+  "atm.break": {
+    "subtitle": "subtitles.yogurines.atm.break",
+    "sounds": [
+      "yogurines:atm/break"
+    ]
+  },
+  "atm.hit": {
+    "subtitle": "subtitles.yogurines.atm.hit",
+    "sounds": [
+      "yogurines:atm/hit"
+    ]
+  },
+  "atm.step": {
+    "subtitle": "subtitles.yogurines.atm.step",
+    "sounds": [
+      "yogurines:atm/step"
+    ]
+  },
+  "wallet.open": {
+    "subtitle": "subtitles.yogurines.wallet.open",
+    "sounds": [
+      "yogurines:wallet/open"
+    ]
+  },
+  "wallet.close": {
+    "subtitle": "subtitles.yogurines.wallet.close",
+    "sounds": [
+      "yogurines:wallet/close"
+    ]
   }
 }

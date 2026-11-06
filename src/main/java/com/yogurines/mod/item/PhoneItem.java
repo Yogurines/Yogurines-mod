@@ -1,14 +1,19 @@
 package com.yogurines.mod.item;
 
-import net.minecraft.network.chat.Component;
+import com.yogurines.mod.client.ClientHooks;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.extensions.common.IClientItemExtensions;
+import net.minecraftforge.fml.DistExecutor;
 
-/** El móvil. De momento solo avisa: las apps llegan en las siguientes versiones. */
+import java.util.function.Consumer;
+
+/** El móvil: clic derecho (o la tecla M) abre la pantalla de inicio. */
 public class PhoneItem extends Item {
     public PhoneItem(Properties properties) {
         super(properties);
@@ -17,8 +22,13 @@ public class PhoneItem extends Item {
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         if (level.isClientSide) {
-            player.displayClientMessage(Component.translatable("item.yogurines.phone.soon"), true);
+            DistExecutor.unsafeRunWhenOn(Dist.CLIENT, () -> ClientHooks::openPhone);
         }
         return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide);
+    }
+
+    @Override
+    public void initializeClient(Consumer<IClientItemExtensions> consumer) {
+        consumer.accept(ClientHooks.phoneExtensions());
     }
 }
