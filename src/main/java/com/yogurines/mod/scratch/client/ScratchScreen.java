@@ -6,6 +6,7 @@ import com.yogurines.mod.client.PixelScreen;
 import com.yogurines.mod.item.Money;
 import com.yogurines.mod.net.Net;
 import com.yogurines.mod.registry.ModSounds;
+import com.yogurines.mod.npc.client.T;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
@@ -22,7 +23,6 @@ public class ScratchScreen extends PixelScreen {
     private static final ResourceLocation SYMBOLS = new ResourceLocation(Yogurines.MOD_ID, "textures/gui/scratch_symbols.png");
     private static final ResourceLocation COIN = new ResourceLocation(Yogurines.MOD_ID, "textures/item/coin_1.png");
     private static final ResourceLocation OVERLAY = new ResourceLocation(Yogurines.MOD_ID, "scratch_overlay");
-    private static final String[] NAMES = {"BRONCE", "PLATA", "ORO"};
     private static final long[] GOLD_PRIZES = {100, 200, 500, 2500, 10000, 50000};
     private static final int[][] LINES = {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {0, 3, 6}, {1, 4, 7}, {2, 5, 8}, {0, 4, 8}, {2, 4, 6}};
 
@@ -47,7 +47,7 @@ public class ScratchScreen extends PixelScreen {
     }
 
     public ScratchScreen(CompoundTag t) {
-        super("Rasca y gana");
+        super(com.yogurines.mod.npc.client.T.t("scratch.title"));
         tier = Math.max(0, Math.min(2, t.getInt("tier")));
         prize = t.getLong("prize");
         vals = t.getIntArray("vals");
@@ -121,7 +121,7 @@ public class ScratchScreen extends PixelScreen {
         mx = mouseX; my = mouseY;
         // sombra y cartón
         rect(3, 4, 150, 200, 0x66000000);
-        tex(new ResourceLocation(Yogurines.MOD_ID, "textures/gui/scratch_" + tier + ".png"), 0, 0, 150, 200, 150, 200);
+        tex(new ResourceLocation(Yogurines.MOD_ID, "textures/gui/scratch_" + tier + (T.spanish() ? "" : "_en") + ".png"), 0, 0, 150, 200, 150, 200);
         // contenido de las casillas (debajo del plateado)
         for (int i = 0; i < zones.length; i++) contents(i);
         if (overlay != null) g.blit(OVERLAY, 0, 0, 150, 200, 0, 0, 150, 200, 150, 200);
@@ -166,13 +166,13 @@ public class ScratchScreen extends PixelScreen {
     private void side() {
         int x = sx(), w = 88;
         round(x, 0, w, 204, 4, 0xEE1A1C21);
-        center("RASCA " + NAMES[tier], x + w / 2, 8, 0xFFFFD84A);
+        center(T.t("scratch.name." + tier).toUpperCase(), x + w / 2, 8, 0xFFFFD84A);
         int y = 24;
         switch (tier) {
-            case 0 -> { y = para("Si salen 3 cantidades iguales, ganas esa cantidad.", x + 6, y, w - 12); }
-            case 1 -> { y = para("Cada número tuyo que esté entre los ganadores te da el premio que tiene debajo.", x + 6, y, w - 12); }
+            case 0 -> { y = para(T.t("scratch.rules.0"), x + 6, y, w - 12); }
+            case 1 -> { y = para(T.t("scratch.rules.1"), x + 6, y, w - 12); }
             default -> {
-                y = para("3 símbolos iguales en raya (también en diagonal):", x + 6, y, w - 12) + 2;
+                y = para(T.t("scratch.rules.2"), x + 6, y, w - 12) + 2;
                 for (int s = 5; s >= 0; s--) {
                     g.blit(SYMBOLS, x + 8, y, 10, 10, s * 16, 0, 16, 16, 96, 16);
                     textScaled("Y" + Money.fmt(GOLD_PRIZES[s]), x + 22, y + 2, 0.8f, 0xFFE0E0E0, false);
@@ -183,19 +183,19 @@ public class ScratchScreen extends PixelScreen {
         if (finished) {
             int ry = 140;
             if (prize > 0) {
-                center("¡HAS GANADO!", x + w / 2, ry, 0xFF7FD36A);
+                center(T.t("scratch.won"), x + w / 2, ry, 0xFF7FD36A);
                 textScaled("Y" + Money.fmt(prize), x + w / 2f, ry + 12, 1.6f, 0xFFFFD84A, true);
             } else {
-                center("Esta vez", x + w / 2, ry, 0xFFBBBBBB);
-                center("no ha tocado…", x + w / 2, ry + 11, 0xFFBBBBBB);
+                center(T.t("scratch.lost1"), x + w / 2, ry, 0xFFBBBBBB);
+                center(T.t("scratch.lost2"), x + w / 2, ry + 11, 0xFFBBBBBB);
             }
             boolean hover = in(mx, my, x + 6, 180, w - 12, 16);
             round(x + 6, 180, w - 12, 16, 3, hover ? 0xFF4CB43A : 0xFF3F9A2E);
-            center(prize > 0 ? "RECLAMAR" : "CERRAR", x + w / 2, 184, 0xFFFFFFFF);
+            center(T.t(prize > 0 ? "scratch.claim" : "scratch.close"), x + w / 2, 184, 0xFFFFFFFF);
         } else {
             int n = 0;
             for (boolean d : done) if (!d) n++;
-            center("Quedan " + n, x + w / 2, 186, 0xFF8A8A8A);
+            center(T.t("scratch.left", n), x + w / 2, 186, 0xFF8A8A8A);
         }
     }
 

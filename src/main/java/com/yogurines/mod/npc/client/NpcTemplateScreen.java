@@ -16,7 +16,7 @@ public class NpcTemplateScreen extends Screen {
     private int scroll;
 
     public NpcTemplateScreen(List<String> names, String current) {
-        super(Component.literal("Plantillas de NPC"));
+        super(Component.literal(T.t("tpl.title")));
         this.names = new ArrayList<>(names);
         this.current = current;
     }
@@ -39,17 +39,17 @@ public class NpcTemplateScreen extends Screen {
         g.fill(x - 1, y - 1, x + w + 1, y + h + 1, 0xFF000000);
         g.fill(x, y, x + w, y + h, 0xF21A1C21);
         g.fill(x, y, x + w, y + 2, 0xFF7FD36A);
-        g.drawString(font, Nameplate.styled("PLANTILLAS DE NPC", "tech"), x + 8, y + 9, 0xFFFFFFFF, false);
-        g.drawString(font, "Elige qué pone el modificador al hacer clic en un bloque", x + 8, y + 22, 0xFF9A9A9A, false);
+        g.drawString(font, Nameplate.styled(T.t("tpl.title").toUpperCase(), "tech"), x + 8, y + 9, 0xFFFFFFFF, false);
+        g.drawString(font, T.t("tpl.sub"), x + 8, y + 22, 0xFF9A9A9A, false);
         int ry = y + 38;
-        row(g, mx, my, x, ry, w, "+ NPC nuevo (en blanco)", current.isEmpty(), false);
+        row(g, mx, my, x, ry, w, T.t("tpl.blank"), current.isEmpty(), false);
         int vis = rows();
         scroll = Math.max(0, Math.min(scroll, Math.max(0, names.size() - vis)));
         for (int i = 0; i < vis && i + scroll < names.size(); i++) {
             String n = names.get(i + scroll);
             row(g, mx, my, x, ry + 18 * (i + 1), w, n, n.equalsIgnoreCase(current), true);
         }
-        if (names.isEmpty()) g.drawString(font, "Aún no hay plantillas. Guárdalas desde el editor.", x + 8, ry + 24, 0xFF777777, false);
+        if (names.isEmpty()) g.drawString(font, T.t("tpl.none"), x + 8, ry + 24, 0xFF777777, false);
         super.render(g, mx, my, pt);
     }
 

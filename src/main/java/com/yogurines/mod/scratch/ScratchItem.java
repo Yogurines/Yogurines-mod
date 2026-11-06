@@ -15,7 +15,7 @@ import net.minecraft.world.level.Level;
 import javax.annotation.Nullable;
 import java.util.List;
 
-/** Rasca y gana. tier 0 = Bronce (Y1), 1 = Plata (Y10), 2 = Oro (Y100). */
+/** Rasca y gana. tier 0 = Bronce, 1 = Plata, 2 = Oro (el precio lo pone cada NPC que lo venda). */
 public class ScratchItem extends Item {
     public final int tier;
 
@@ -36,7 +36,6 @@ public class ScratchItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tip, TooltipFlag flag) {
-        tip.add(Component.translatable("tooltip.yogurines.scratch.price", Money.fmt(ScratchServer.PRICE[tier])).withStyle(ChatFormatting.GOLD));
         tip.add(Component.translatable("tooltip.yogurines.scratch.max", Money.fmt(ScratchServer.MAX[tier])).withStyle(ChatFormatting.YELLOW));
         tip.add(Component.translatable("tooltip.yogurines.scratch.hint").withStyle(ChatFormatting.GRAY));
     }

@@ -1,1 +1,30 @@
-{"providers":[{"type":"ttf","file":"yogurines:jersey10.ttf","shift":[0,0],"size":10,"oversample":6}]}
+{
+ "providers": [
+  {
+   "type": "space",
+   "advances": {
+    " ": 3
+   }
+  },
+  {
+   "type": "bitmap",
+   "file": "yogurines:font/cartel.png",
+   "height": 10,
+   "ascent": 8,
+   "chars": [
+    "!\"#$%&'()*+,-./0",
+    "123456789:;<=>?@",
+    "ABCDEFGHIJKLMNOP",
+    "QRSTUVWXYZ[\\]^_`",
+    "abcdefghijklmnop",
+    "qrstuvwxyz{|}~ÁÉ",
+    "ÍÓÚÑÜáéíóúñü¡¿ÀÈ",
+    "ÒàèòÇç·€\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"
+   ]
+  },
+  {
+   "type": "reference",
+   "id": "minecraft:default"
+  }
+ ]
+}

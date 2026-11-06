@@ -3,11 +3,14 @@ from PIL import Image, ImageDraw, ImageFont
 import math, os
 A='src/main/resources/assets/yogurines/textures/gui'
 os.makedirs(A,exist_ok=True)
-FONT='src/main/resources/assets/yogurines/font/silkscreen.ttf'
+FONT='tools/fonts/silkscreen.ttf'
 f8=ImageFont.truetype(FONT,8); f16=ImageFont.truetype(FONT,16)
-TIERS=[('BRONCE','Y1',(224,123,42),(255,177,92),(122,58,12)),
-       ('PLATA','Y10',(143,163,191),(215,226,240),(59,74,96)),
-       ('ORO','Y100',(232,178,31),(255,240,154),(122,82,0))]
+TIERS=[((224,123,42),(255,177,92),(122,58,12)),
+       ((143,163,191),(215,226,240),(59,74,96)),
+       ((232,178,31),(255,240,154),(122,82,0))]
+# textos del cartón por idioma (scratch_N.png = español, scratch_N_en.png = inglés)
+TXT={'':dict(top='RASCA',names=['BRONCE','PLATA','ORO'],win='NÚMEROS GANADORES',mine='TUS NÚMEROS',same='3 IGUALES = PREMIO',row='3 EN RAYA = PREMIO',foot='JUEGA CON CABEZA'),
+     '_en':dict(top='SCRATCH',names=['BRONZE','SILVER','GOLD'],win='WINNING NUMBERS',mine='YOUR NUMBERS',same='MATCH 3 = PRIZE',row='3 IN A ROW = PRIZE',foot='PLAY RESPONSIBLY')}
 ZONES={0:[(11+i*44,92+j*40,40,36) for j in range(2) for i in range(3)],
        1:[(30+i*32,72,26,26) for i in range(3)]+[(9+i*34,116+j*36,31,32) for j in range(2) for i in range(4)],
        2:[(24+i*36,76+j*33,34,30) for j in range(3) for i in range(3)]}
@@ -22,7 +25,9 @@ def text(d,xy,s,font,fill,outline=None,anchor='mm'):
 def star(d,cx,cy,r,col):
     d.rectangle([cx,cy-r,cx,cy+r],fill=col); d.rectangle([cx-r,cy,cx+r,cy],fill=col); d.rectangle([cx-1,cy-1,cx+1,cy+1],fill=col)
 
-for t,(name,price,c,c2,dk) in enumerate(TIERS):
+for suf,L in TXT.items():
+ for t,(c,c2,dk) in enumerate(TIERS):
+    name=L['names'][t]
     im=Image.new('RGBA',(150,200),c+(255,)); d=ImageDraw.Draw(im)
     # rayos desde arriba
     cx,cy=75,40
@@ -34,27 +39,24 @@ for t,(name,price,c,c2,dk) in enumerate(TIERS):
     d.rectangle([0,0,149,199],outline=dk+(255,),width=3)
     d.rectangle([3,3,146,196],outline=c2+(255,),width=1)
     for (sx,sy) in [(16,14),(12,52),(138,40),(24,78),(128,70)]: star(d,sx,sy,2,(255,255,255,255))
-    text(d,(75,20),'RASCA',f16,(255,255,255,255),dk+(255,))
+    text(d,(75,20),L['top'],f16,(255,255,255,255),dk+(255,))
     text(d,(75,40),name,f16,c2+(255,),dk+(255,))
-    # etiqueta precio
-    d.rectangle([108,7,143,19],fill=(255,255,255,255),outline=dk+(255,))
-    text(d,(126,13),price,f8,dk+(255,))
     # panel de zonas
     zs=ZONES[t]
     x0=min(z[0] for z in zs)-4; y0=min(z[1] for z in zs)-4; x1=max(z[0]+z[2] for z in zs)+3; y1=max(z[1]+z[3] for z in zs)+3
     if t==1:
         d.rectangle([24,68,126,101],fill=tuple(int(v*0.55) for v in c)+(255,))
-        text(d,(75,62),'NÚMEROS GANADORES',f8,(255,255,255,255),dk+(255,))
+        text(d,(75,62),L['win'],f8,(255,255,255,255),dk+(255,))
         d.rectangle([5,112,145,184],fill=tuple(int(v*0.55) for v in c)+(255,))
-        text(d,(75,107),'TUS NÚMEROS',f8,(255,255,255,255),dk+(255,))
+        text(d,(75,107),L['mine'],f8,(255,255,255,255),dk+(255,))
     else:
         d.rectangle([x0,y0,x1,y1],fill=tuple(int(v*0.55) for v in c)+(255,))
-        if t==0: text(d,(75,y0-5),'3 IGUALES = PREMIO',f8,(255,255,255,255),dk+(255,))
-        else: text(d,(75,y0-5),'3 EN RAYA = PREMIO',f8,(255,255,255,255),dk+(255,))
+        if t==0: text(d,(75,y0-5),L['same'],f8,(255,255,255,255),dk+(255,))
+        else: text(d,(75,y0-5),L['row'],f8,(255,255,255,255),dk+(255,))
     for (x,y,w,h) in zs:
         d.rectangle([x,y,x+w-1,y+h-1],fill=(255,248,230,255))
-    text(d,(75,192),'JUEGA CON CABEZA',f8,(0,0,0,150))
-    im.save(f'{A}/scratch_{t}.png')
+    text(d,(75,192),L['foot'],f8,(0,0,0,150))
+    im.save(f'{A}/scratch_{t}{suf}.png')
 
 # símbolos 16x16: moneda, Y, lingote, diamante, corona, fundadores (estrella)
 sym=Image.new('RGBA',(96,16),(0,0,0,0)); d=ImageDraw.Draw(sym)

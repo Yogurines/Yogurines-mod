@@ -59,6 +59,16 @@ tasks.named('processResources', ProcessResources).configure {
     filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
         expand replaceProperties + [project: project]
     }
+    // el español de cualquier país usa es_es.json (el resto de idiomas cae a en_us)
+    doLast {
+        def langDir = new File(destinationDir, 'assets/yogurines/lang')
+        def es = new File(langDir, 'es_es.json')
+        if (es.exists()) {
+            ['es_ar', 'es_cl', 'es_ec', 'es_mx', 'es_uy', 'es_ve'].each { code ->
+                new File(langDir, code + '.json').write(es.getText('UTF-8'), 'UTF-8')
+            }
+        }
+    }
 }
 
 tasks.named('jar', Jar).configure {
