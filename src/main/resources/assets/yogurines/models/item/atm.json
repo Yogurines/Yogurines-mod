@@ -1,5 +1,5 @@
 {
-  "parent": "yogurines:block/atm",
+  "parent": "yogurines:block/atm_full",
   "display": {
     "gui": {
       "rotation": [

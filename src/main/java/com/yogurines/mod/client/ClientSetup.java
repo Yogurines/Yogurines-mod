@@ -16,6 +16,8 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.HumanoidArm;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import com.yogurines.mod.item.PhoneItem;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.event.*;
 import net.minecraftforge.common.MinecraftForge;
@@ -45,8 +47,9 @@ public final class ClientSetup {
         SELFIE_POSE = HumanoidModel.ArmPose.create("YOGURINES_SELFIE", false, (model, entity, arm) -> {
             float side = arm == HumanoidArm.RIGHT ? -1 : 1;
             var a = arm == HumanoidArm.RIGHT ? model.rightArm : model.leftArm;
-            a.xRot = -2.05F;
-            a.yRot = side * 0.3F;
+            // brazo estirado hacia la cámara del móvil, que está delante de la cara
+            a.xRot = model.head.xRot * 0.5F - 1.75F;
+            a.yRot = model.head.yRot - side * 0.32F;
             a.zRot = 0;
         });
         modBus.addListener(ClientSetup::keys);
@@ -88,6 +91,7 @@ public final class ClientSetup {
         while (PHONE_KEY.consumeClick()) {
             if (mc.screen == null && ClientHooks.hasPhone()) ClientHooks.openPhone();
         }
+        restoreHidden();
         CameraMode.tick();
     }
 
@@ -132,6 +136,32 @@ public final class ClientSetup {
         }
     }
 
+    private static ItemStack hiddenMain, hiddenOff;
+
+    /** En el selfie no se dibuja el móvil en tu mano: la foto se hace desde él. */
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void renderPlayerHideItem(RenderPlayerEvent.Pre e) {
+        if (e.getEntity() != Minecraft.getInstance().player || !CameraMode.selfie()) return;
+        var inv = e.getEntity().getInventory();
+        hiddenMain = inv.items.get(inv.selected);
+        hiddenOff = inv.offhand.get(0);
+        if (hiddenMain.getItem() instanceof PhoneItem) inv.items.set(inv.selected, ItemStack.EMPTY); else hiddenMain = null;
+        if (hiddenOff.getItem() instanceof PhoneItem) inv.offhand.set(0, ItemStack.EMPTY); else hiddenOff = null;
+    }
+
+    @net.minecraftforge.eventbus.api.SubscribeEvent
+    public static void renderPlayerPost(RenderPlayerEvent.Post e) {
+        if (e.getEntity() == Minecraft.getInstance().player) restoreHidden();
+    }
+
+    private static void restoreHidden() {
+        var pl = Minecraft.getInstance().player;
+        if (pl == null) { hiddenMain = hiddenOff = null; return; }
+        var inv = pl.getInventory();
+        if (hiddenMain != null) { inv.items.set(inv.selected, hiddenMain); hiddenMain = null; }
+        if (hiddenOff != null) { inv.offhand.set(0, hiddenOff); hiddenOff = null; }
+    }
+
     @net.minecraftforge.eventbus.api.SubscribeEvent
     public static void cameraAngles(ViewportEvent.ComputeCameraAngles e) {
         if (!CameraMode.selfie()) return;
@@ -139,10 +169,12 @@ public final class ClientSetup {
         if (cam.getEntity() == null) return;
         Vec3 eye = cam.getEntity().getEyePosition((float) e.getPartialTick());
         double d = cam.getPosition().distanceTo(eye);
-        double target = 1.7;
-        cam.move(Math.max(0, d - target), CameraMode.offY() * 0.6, CameraMode.offX() * 0.8);
-        e.setYaw(e.getYaw() - CameraMode.offX() * 12f);
-        e.setPitch(e.getPitch() + CameraMode.offY() * 10f);
+        // La cámara se pone donde está el móvil: delante de la cara, a la distancia del brazo,
+        // un poco por encima y mirando hacia ti (como un selfie de verdad).
+        double target = 0.85;
+        cam.move(Math.max(0, d - target), 0.12 + CameraMode.offY() * 0.25, CameraMode.offX() * 0.35);
+        e.setYaw(e.getYaw() - CameraMode.offX() * 14f);
+        e.setPitch(e.getPitch() + 8f + CameraMode.offY() * 12f);
     }
 
     @net.minecraftforge.eventbus.api.SubscribeEvent

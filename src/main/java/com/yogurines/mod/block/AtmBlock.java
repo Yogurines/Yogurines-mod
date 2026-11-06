@@ -36,8 +36,8 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Cajero automático de 2 bloques de alto. La mitad de abajo dibuja el modelo entero;
- * la de arriba es invisible y solo sirve para ocupar el hueco y tener colisión.
+ * Cajero automático de 2 bloques de alto. Cada mitad dibuja su parte del modelo,
+ * así las grietas al romperlo salen en la mitad que estás picando.
  */
 public class AtmBlock extends HorizontalDirectionalBlock {
     public static final EnumProperty<DoubleBlockHalf> HALF = BlockStateProperties.DOUBLE_BLOCK_HALF;
@@ -115,7 +115,7 @@ public class AtmBlock extends HorizontalDirectionalBlock {
 
     @Override
     public RenderShape getRenderShape(BlockState state) {
-        return state.getValue(HALF) == DoubleBlockHalf.UPPER ? RenderShape.INVISIBLE : RenderShape.MODEL;
+        return RenderShape.MODEL;
     }
 
     @Override

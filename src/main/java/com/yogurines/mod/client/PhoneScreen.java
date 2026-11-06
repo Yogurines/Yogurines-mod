@@ -19,7 +19,7 @@ import java.util.*;
 
 /** El móvil: pantalla de inicio con reloj del juego y todas las apps. */
 public class PhoneScreen extends PixelScreen {
-    public enum Page { HOME, GALLERY, PHOTO, PICK_PHOTO, YOGUGRAM, POST, PROFILE, EDIT_PROFILE, CROP, NEW_POST, CHATS, CHAT, BANK, TRANSFER, SETTINGS }
+    public enum Page { HOME, GALLERY, PHOTO, PICK_PHOTO, YOGUGRAM, SEARCH, POST, PROFILE, EDIT_PROFILE, CROP, NEW_POST, CHATS, CHAT, BANK, TRANSFER, SETTINGS }
 
     // medidas virtuales
     private static final int W = 180, H = 340;
@@ -69,6 +69,7 @@ public class PhoneScreen extends PixelScreen {
     private final Input inComment = new Input("Añade un comentario…", 140, false);
     private final Input inMsg = new Input("Mensaje", 200, false);
     private final Input inAmount = new Input("Cantidad", 7, true);
+    private final Input inSearch = new Input("Buscar por nombre…", 24, false);
     private final Input inConcept = new Input("Concepto (opcional)", 40, false);
     private Input focus;
 
@@ -172,6 +173,7 @@ public class PhoneScreen extends PixelScreen {
             case PICK_PHOTO -> drawGallery(true);
             case PHOTO -> drawPhoto();
             case YOGUGRAM -> drawFeed();
+            case SEARCH -> drawSearch();
             case POST -> drawPost();
             case PROFILE -> drawProfile();
             case EDIT_PROFILE -> drawEditProfile();
@@ -308,9 +310,13 @@ public class PhoneScreen extends PixelScreen {
 
     /** Empieza una zona con scroll: devuelve la y de inicio del contenido. */
     private int beginScroll(int top) {
-        viewH = BOTTOM - top;
+        return beginScroll(top, BOTTOM);
+    }
+
+    private int beginScroll(int top, int bottom) {
+        viewH = bottom - top;
         clipTop = top;
-        clipBottom = BOTTOM;
+        clipBottom = bottom;
         clip(SX, top, SW, viewH);
         return top - scroll;
     }
@@ -318,7 +324,6 @@ public class PhoneScreen extends PixelScreen {
     private void endScroll(int top, int endY) {
         contentH = endY + scroll - top;
         unclip();
-        clip(SX, SY, SW, SH);
         clipTop = 0;
         clipBottom = 10000;
         scroll = Math.max(0, Math.min(scroll, Math.max(0, contentH - viewH)));
@@ -542,81 +547,183 @@ public class PhoneScreen extends PixelScreen {
 
     // ---------- yogugram ----------
 
+    private static final int TABS_H = 22;
+
     private void drawFeed() {
         rect(SX, TOP, SW, 20, CARD);
         rect(SX, TOP + 20, SW, 1, LINE);
         textScaled("Yogugram", SX + 8, TOP + 4, 1.4f, PINK, false);
-        // "+" y perfil
+        // "+" y perfil arriba a la derecha
         int px = SX + SW - 42;
         boolean hp = hover(px, TOP + 3, 14, 14);
         round(px, TOP + 3, 14, 14, 4, hp ? PINK : 0xFF2A2D33);
         center("+", px + 7, TOP + 6, 0xFFFFFFFF);
-        hit(px, TOP + 3, 14, 14, () -> { pickForWallpaper = false; go(Page.PICK_PHOTO); });
+        hit(px, TOP + 3, 14, 14, this::newPost);
         avatar(ClientData.me, SX + SW - 22, TOP + 3, 14);
         hit(SX + SW - 22, TOP + 3, 14, 14, () -> { profileUser = ClientData.me; go(Page.PROFILE); });
         int top = TOP + 21;
-        int y = beginScroll(top);
+        int y = beginScroll(top, BOTTOM - TABS_H) + 6;
         if (ClientData.posts.isEmpty()) {
             center("Todavía no hay fotos", SX + SW / 2, y + 40, MUTED);
             y += 70;
         }
         for (ClientData.Post p : ClientData.posts) {
-            y = postCard(p, y, false);
+            y = postCard(p, y, false) + 8;
         }
         endScroll(top, y);
+        drawTabs(Page.YOGUGRAM);
+    }
+
+    private void newPost() {
+        pickForWallpaper = false;
+        ClientData.User me = ClientData.self();
+        if (me != null && !me.created) { openYogugram(true); return; }
+        go(Page.PICK_PHOTO);
+    }
+
+    /** Pestañas de abajo de Yogugram: inicio, buscar, publicar, mensajes y perfil. */
+    private void drawTabs(Page active) {
+        int y = BOTTOM - TABS_H;
+        rect(SX, y, SW, TABS_H, CARD);
+        rect(SX, y, SW, 1, LINE);
+        int tw = SW / 5;
+        String[] names = {"Inicio", "Buscar", "Publicar", "Mensajes", "Perfil"};
+        boolean[] on = {active == Page.YOGUGRAM, active == Page.SEARCH, false, false,
+                active == Page.PROFILE && ClientData.me != null && ClientData.me.equals(profileUser)};
+        for (int i = 0; i < 5; i++) {
+            int cx = SX + i * tw + tw / 2;
+            boolean h = hover(SX + i * tw, y, tw, TABS_H);
+            int c = on[i] ? INK : h ? 0xFF4A4E57 : MUTED;
+            int iy = y + 4;
+            switch (i) {
+                case 0 -> { // casa
+                    for (int k = 0; k < 5; k++) rect(cx - k, iy + k, 2 * k + 1, 1, c);
+                    rect(cx - 4, iy + 5, 9, 5, c);
+                    rect(cx - 1, iy + 7, 3, 3, CARD);
+                }
+                case 1 -> { // lupa
+                    round(cx - 4, iy, 8, 8, 4, c);
+                    round(cx - 2, iy + 2, 4, 4, 2, CARD);
+                    rect(cx + 3, iy + 7, 2, 2, c);
+                    rect(cx + 4, iy + 8, 2, 2, c);
+                }
+                case 2 -> { // más
+                    round(cx - 5, iy, 11, 10, 3, h ? PINK : c);
+                    rect(cx - 2, iy + 4, 5, 2, CARD);
+                    rect(cx - 1, iy + 2, 2, 6, CARD);
+                    rect(cx + 1, iy + 2, 0, 0, CARD);
+                }
+                case 3 -> { // bocadillo
+                    round(cx - 5, iy, 11, 8, 3, c);
+                    rect(cx - 3, iy + 8, 2, 2, c);
+                    unread3(cx + 4, iy - 2);
+                }
+                default -> avatar(ClientData.me, cx - 5, iy - 1, 11);
+            }
+            textScaled(names[i], cx, y + 15, 0.5f, c, true);
+            final int idx = i;
+            hit(SX + i * tw, y, tw, TABS_H, () -> {
+                switch (idx) {
+                    case 0 -> { if (page != Page.YOGUGRAM) { tap(); back.clear(); back.push(Page.HOME); page = Page.YOGUGRAM; scroll = 0; focus = null; } else scroll = 0; }
+                    case 1 -> { if (page != Page.SEARCH) { inSearch.set(""); go(Page.SEARCH); focus = inSearch; } }
+                    case 2 -> newPost();
+                    case 3 -> go(Page.CHATS);
+                    default -> { profileUser = ClientData.me; if (page != Page.PROFILE) go(Page.PROFILE); }
+                }
+            });
+        }
+    }
+
+    private void unread3(int x, int y) {
+        if (unreadTotal() > 0) round(x, y, 5, 5, 2, 0xFFFF3B30);
+    }
+
+    private void drawSearch() {
+        rect(SX, TOP, SW, 26, CARD);
+        rect(SX, TOP + 26, SW, 1, LINE);
+        text("<", SX + 8, TOP + 9, INK);
+        hit(SX, TOP, 20, 26, this::goBack);
+        field(inSearch, SX + 20, TOP + 5, SW - 26);
+        if (focus == null) focus = inSearch;
+        int top = TOP + 27;
+        int y = beginScroll(top, BOTTOM - TABS_H) + 4;
+        String q = inSearch.get().toLowerCase(Locale.ROOT);
+        int n = 0;
+        for (ClientData.User u : ClientData.users.values()) {
+            if (!q.isEmpty() && !u.display.toLowerCase(Locale.ROOT).contains(q) && !u.nick.toLowerCase(Locale.ROOT).contains(q)) continue;
+            n++;
+            boolean h = hover(SX + 5, y, SW - 10, 30);
+            round(SX + 5, y, SW - 10, 30, 5, h ? 0xFFEFF1F4 : CARD);
+            avatar(u.id, SX + 10, y + 5, 20);
+            text(fit(u.display, SW - 70), SX + 36, y + 6, INK);
+            text(fit("@" + u.nick, SW - 70), SX + 36, y + 16, MUTED);
+            ClientData.User me = ClientData.self();
+            if (me != null && me.following.contains(u.id)) right("Siguiendo", SX + SW - 10, y + 11, MUTED);
+            UUID id = u.id;
+            hit(SX + 5, y, SW - 10, 30, () -> { profileUser = id; go(Page.PROFILE); });
+            y += 34;
+        }
+        if (n == 0) { center("Nadie se llama así", SX + SW / 2, y + 20, MUTED); y += 40; }
+        endScroll(top, y);
+        drawTabs(Page.SEARCH);
+    }
+
+    /** Alto de la tarjeta de una publicación (para pintar su fondo antes del contenido). */
+    private int cardHeight(ClientData.Post p, boolean detail) {
+        int w = SW - 10;
+        int h = 26 + w * 9 / 16 + 18;
+        if (!p.caption.isEmpty()) h += Toasts.wrap(font, ClientData.display(p.author) + ": " + p.caption, w - 14, detail ? 8 : 3).size() * 10;
+        if (!detail && !p.comments.isEmpty()) h += 10;
+        return h + 6;
     }
 
     private int postCard(ClientData.Post p, int y, boolean detail) {
-        int start = y;
-        boolean visible = y < BOTTOM && y + 200 > TOP;
-        rect(SX, y, SW, 1, LINE);
-        y += 5;
-        if (visible) {
-            avatar(p.author, SX + 6, y, 16);
-            text(fit(ClientData.display(p.author), SW - 80), SX + 26, y, INK);
-            text(fit("@" + ClientData.nick(p.author), SW - 80), SX + 26, y + 9, MUTED);
-            right(ago(p.time), SX + SW - 6, y + 4, MUTED);
-        }
+        int x = SX + 5, w = SW - 10;
+        int ch = cardHeight(p, detail);
+        int cardStart = y;
+        if (y + ch < clipTop || y > clipBottom) return y + ch;
+        round(x, y + 1, w, ch, 6, 0xFFDCDFE5);
+        round(x, y, w, ch, 6, CARD);
+        y += 6;
+        avatar(p.author, x + 6, y, 16);
+        text(fit(ClientData.display(p.author), w - 80), x + 27, y, INK);
+        text(fit("@" + ClientData.nick(p.author), w - 80), x + 27, y + 9, MUTED);
+        right(ago(p.time), x + w - 7, y + 4, MUTED);
         UUID author = p.author;
-        hit(SX, y - 2, SW - 50, 20, () -> { profileUser = author; go(Page.PROFILE); });
-        y += 21;
-        int ih = SW * 9 / 16;
-        if (y + ih > TOP && y < BOTTOM) {
-            Images.Tex t = Images.get(p.img);
-            if (t != null) imageCover(t, SX, y, SW, ih);
-            else { rect(SX, y, SW, ih, 0xFFE9EBEF); center("Cargando…", SX + SW / 2, y + ih / 2 - 4, MUTED); }
-        }
+        hit(x, y - 2, w - 50, 20, () -> { profileUser = author; go(Page.PROFILE); });
+        y += 20;
+        int ih = w * 9 / 16;
+        Images.Tex t = Images.get(p.img);
+        if (t != null) imageCover(t, x, y, w, ih);
+        else { rect(x, y, w, ih, 0xFFE9EBEF); center("Cargando…", x + w / 2, y + ih / 2 - 4, MUTED); }
         int pid = p.id;
-        if (!detail) hit(SX, y, SW, ih, () -> { postId = pid; go(Page.POST); });
+        if (!detail) hit(x, y, w, ih, () -> { postId = pid; go(Page.POST); });
         y += ih + 4;
         boolean liked = p.likes.contains(ClientData.me);
-        boolean hl = hover(SX + 4, y, 40, 12);
-        text((liked ? "♥ " : "♡ ") + p.likes.size(), SX + 8, y + 2, liked || hl ? PINK : INK);
-        hit(SX + 4, y, 40, 12, () -> {
+        boolean hl = hover(x + 2, y, 40, 12);
+        text((liked ? "♥ " : "♡ ") + p.likes.size(), x + 7, y + 2, liked || hl ? PINK : INK);
+        hit(x + 2, y, 40, 12, () -> {
             CompoundTag o = new CompoundTag();
             o.putInt("id", pid);
             Net.toServer("like", o);
             if (!liked) sound(ModSounds.LIKE.get(), 1f, 0.8f);
         });
         String cm = "Comentarios (" + p.comments.size() + ")";
-        boolean hc = hover(SX + 50, y, font.width(cm) + 6, 12);
-        text(cm, SX + 52, y + 2, hc ? BLUE : MUTED);
-        if (!detail) hit(SX + 50, y, font.width(cm) + 6, 12, () -> { postId = pid; go(Page.POST); });
+        boolean hc = hover(x + 46, y, font.width(cm) + 6, 12);
+        text(cm, x + 48, y + 2, hc ? BLUE : MUTED);
+        if (!detail) hit(x + 46, y, font.width(cm) + 6, 12, () -> { postId = pid; go(Page.POST); });
         y += 14;
         if (!p.caption.isEmpty()) {
-            List<FormattedCharSequence> lines = Toasts.wrap(font, ClientData.display(p.author) + ": " + p.caption, SW - 14, detail ? 8 : 3);
-            for (FormattedCharSequence l : lines) {
-                if (y > TOP - 10 && y < BOTTOM) text(l, SX + 7, y, INK);
+            for (FormattedCharSequence l : Toasts.wrap(font, ClientData.display(p.author) + ": " + p.caption, w - 14, detail ? 8 : 3)) {
+                text(l, x + 7, y, INK);
                 y += 10;
             }
         }
         if (!detail && !p.comments.isEmpty()) {
             ClientData.Comment c = p.comments.get(p.comments.size() - 1);
-            String s = ClientData.display(c.author) + ": " + c.text;
-            if (y > TOP - 10 && y < BOTTOM) text(fit(s, SW - 14), SX + 7, y, MUTED);
-            y += 10;
+            text(fit(ClientData.display(c.author) + ": " + c.text, w - 14), x + 7, y, MUTED);
         }
-        return y + 6 + (start == y ? 1 : 0);
+        return cardStart + ch;
     }
 
     private ClientData.Post findPost(int id) {
@@ -652,7 +759,6 @@ public class PhoneScreen extends PixelScreen {
         }
         contentH = y + scroll - top;
         unclip();
-        clip(SX, SY, SW, SH);
         clipTop = 0;
         clipBottom = 10000;
         scroll = Math.max(0, Math.min(scroll, Math.max(0, contentH - viewH)));
@@ -677,7 +783,7 @@ public class PhoneScreen extends PixelScreen {
         appBar(u == null ? "Perfil" : "@" + u.nick, INK);
         if (u == null) return;
         int top = TOP + 19;
-        int y = beginScroll(top);
+        int y = beginScroll(top, BOTTOM - TABS_H);
         rect(SX, y, SW, 120, CARD);
         avatar(u.id, SX + 10, y + 8, 40);
         int posts = 0;
@@ -731,6 +837,7 @@ public class PhoneScreen extends PixelScreen {
         }
         if (mine.isEmpty()) { center("Sin fotos todavía", SX + SW / 2, y + 20, MUTED); y += 40; }
         endScroll(top, y + ((mine.size() + 2) / 3) * 55 + 4);
+        drawTabs(Page.PROFILE);
     }
 
     private void stat(int cx, int y, int n, String label) {
@@ -997,7 +1104,6 @@ public class PhoneScreen extends PixelScreen {
             y += h + 4;
         }
         unclip();
-        clip(SX, SY, SW, SH);
         clipTop = 0;
         clipBottom = 10000;
         rect(SX, bottom, SW, 22, CARD);
@@ -1237,7 +1343,7 @@ public class PhoneScreen extends PixelScreen {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         if (key == GLFW.GLFW_KEY_ESCAPE) {
-            if (focus != null && page != Page.CHAT && page != Page.NEW_POST) focus = null;
+            if (focus != null && page != Page.CHAT && page != Page.NEW_POST && page != Page.SEARCH) focus = null;
             else goBack();
             return true;
         }

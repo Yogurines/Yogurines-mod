@@ -1,7 +1,13 @@
 {
-  "parent": "item/generated",
-  "textures": {
-    "layer0": "yogurines:item/phone"
+  "loader": "forge:separate_transforms",
+  "gui_light": "front",
+  "base": {
+    "parent": "yogurines:item/phone_3d"
+  },
+  "perspectives": {
+    "gui": {
+      "parent": "yogurines:item/phone_flat"
+    }
   },
   "overrides": [
     {
