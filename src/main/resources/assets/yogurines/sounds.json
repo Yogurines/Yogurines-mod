@@ -88,5 +88,78 @@
     "sounds": [
       "yogurines:wallet/close"
     ]
+  },
+  "npc.dialog_open": {
+    "subtitle": "subtitles.yogurines.npc.dialog_open",
+    "sounds": [
+      {
+        "name": "yogurines:npc/dialog_open"
+      }
+    ]
+  },
+  "npc.letter": {
+    "subtitle": "subtitles.yogurines.npc.letter",
+    "sounds": [
+      {
+        "name": "yogurines:npc/letter"
+      }
+    ]
+  },
+  "shop.open": {
+    "subtitle": "subtitles.yogurines.shop.open",
+    "sounds": [
+      {
+        "name": "yogurines:shop/open"
+      }
+    ]
+  },
+  "shop.buy": {
+    "subtitle": "subtitles.yogurines.shop.buy",
+    "sounds": [
+      {
+        "name": "yogurines:shop/buy"
+      }
+    ]
+  },
+  "shop.error": {
+    "subtitle": "subtitles.yogurines.shop.error",
+    "sounds": [
+      {
+        "name": "yogurines:shop/error"
+      }
+    ]
+  },
+  "scratch.scratch": {
+    "subtitle": "subtitles.yogurines.scratch.scratch",
+    "sounds": [
+      {
+        "name": "yogurines:scratch/scratch1"
+      },
+      {
+        "name": "yogurines:scratch/scratch2"
+      },
+      {
+        "name": "yogurines:scratch/scratch3"
+      },
+      {
+        "name": "yogurines:scratch/scratch4"
+      }
+    ]
+  },
+  "scratch.win": {
+    "subtitle": "subtitles.yogurines.scratch.win",
+    "sounds": [
+      {
+        "name": "yogurines:scratch/win"
+      }
+    ]
+  },
+  "scratch.lose": {
+    "subtitle": "subtitles.yogurines.scratch.lose",
+    "sounds": [
+      {
+        "name": "yogurines:scratch/lose"
+      }
+    ]
   }
 }

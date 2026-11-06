@@ -41,7 +41,10 @@ public final class ClientNet {
                 int m = t.getInt("m");
                 if (m == 0) ClientData.poses.remove(u); else ClientData.poses.put(u, m);
             }
-            default -> {}
+            default -> {
+                if (type.startsWith("npc_")) com.yogurines.mod.npc.client.NpcClient.handle(type, t);
+                else if (type.startsWith("scr_")) com.yogurines.mod.scratch.client.ScratchScreen.handle(type, t);
+            }
         }
     }
 
@@ -62,6 +65,7 @@ public final class ClientNet {
             case "sent" -> play(ModSounds.TRANSFER_SENT.get(), 0);
             case "wallet_in", "bill" -> play(ModSounds.ATM_BILL.get(), 0);
             case "coin" -> play(ModSounds.ATM_COIN.get(), 0);
+            case "npc_chat" -> play(ModSounds.NPC_DIALOG_OPEN.get(), 0);
             default -> {}
         }
     }

@@ -56,6 +56,7 @@ public final class ClientSetup {
         modBus.addListener(ClientSetup::overlays);
         modBus.addListener(ClientSetup::tooltips);
         modBus.addListener(ClientSetup::setup);
+        modBus.addListener(com.yogurines.mod.npc.client.NpcClient::renderers);
         MinecraftForge.EVENT_BUS.register(ClientSetup.class);
     }
 
