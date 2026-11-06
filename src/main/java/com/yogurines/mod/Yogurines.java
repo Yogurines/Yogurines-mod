@@ -7,6 +7,7 @@ import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.DistExecutor;
 import com.yogurines.mod.registry.ModCreativeTabs;
+import com.yogurines.mod.registry.ModEntities;
 import com.yogurines.mod.registry.ModItems;
 import com.yogurines.mod.registry.ModSounds;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -21,6 +22,8 @@ public class Yogurines {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
         ModBlocks.BLOCKS.register(modBus);
         ModItems.ITEMS.register(modBus);
+        ModEntities.ENTITIES.register(modBus);
+        modBus.addListener(ModEntities::attributes);
         ModSounds.SOUNDS.register(modBus);
         ModCreativeTabs.TABS.register(modBus);
         Net.init();

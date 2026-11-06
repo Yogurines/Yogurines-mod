@@ -185,7 +185,10 @@ public final class ServerLogic {
             case "atm_take" -> atmWithdraw(p, t.getLong("v"));
             case "wal_store" -> walletStore(p, t.getBoolean("off") ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND);
             case "wal_take" -> walletTake(p, t.getBoolean("off") ? InteractionHand.OFF_HAND : InteractionHand.MAIN_HAND, t.getInt("i"), t.getBoolean("all"));
-            default -> {}
+            default -> {
+                if (type.startsWith("npc_")) com.yogurines.mod.npc.NpcServer.handle(p, type, t);
+                else if (type.startsWith("scr_")) com.yogurines.mod.scratch.ScratchServer.handle(p, type, t);
+            }
         }
     }
 

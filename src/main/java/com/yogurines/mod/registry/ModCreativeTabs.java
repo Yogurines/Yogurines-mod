@@ -19,6 +19,10 @@ public final class ModCreativeTabs {
                 output.accept(ModItems.WALLET.get());
                 output.accept(ModItems.ATM.get());
                 ModItems.MONEY.forEach(item -> output.accept(item.get()));
+                output.accept(ModItems.SCRATCH_BRONZE.get());
+                output.accept(ModItems.SCRATCH_SILVER.get());
+                output.accept(ModItems.SCRATCH_GOLD.get());
+                output.accept(ModItems.NPC_WAND.get());
             })
             .build());
 

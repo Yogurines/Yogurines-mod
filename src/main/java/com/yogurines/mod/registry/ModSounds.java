@@ -27,6 +27,15 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> WALLET_OPEN = register("wallet.open");
     public static final RegistryObject<SoundEvent> WALLET_CLOSE = register("wallet.close");
 
+    public static final RegistryObject<SoundEvent> NPC_DIALOG_OPEN = register("npc.dialog_open");
+    public static final RegistryObject<SoundEvent> NPC_LETTER = register("npc.letter");
+    public static final RegistryObject<SoundEvent> SHOP_OPEN = register("shop.open");
+    public static final RegistryObject<SoundEvent> SHOP_BUY = register("shop.buy");
+    public static final RegistryObject<SoundEvent> SHOP_ERROR = register("shop.error");
+    public static final RegistryObject<SoundEvent> SCRATCH = register("scratch.scratch");
+    public static final RegistryObject<SoundEvent> SCRATCH_WIN = register("scratch.win");
+    public static final RegistryObject<SoundEvent> SCRATCH_LOSE = register("scratch.lose");
+
     private static RegistryObject<SoundEvent> register(String name) {
         return SOUNDS.register(name, () -> SoundEvent.createVariableRangeEvent(new ResourceLocation(Yogurines.MOD_ID, name)));
     }

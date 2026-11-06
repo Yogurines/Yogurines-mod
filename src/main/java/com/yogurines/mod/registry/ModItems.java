@@ -4,6 +4,8 @@ import com.yogurines.mod.Yogurines;
 import com.yogurines.mod.item.MoneyItem;
 import com.yogurines.mod.item.PhoneItem;
 import com.yogurines.mod.item.WalletItem;
+import com.yogurines.mod.npc.NpcWandItem;
+import com.yogurines.mod.scratch.ScratchItem;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
@@ -24,6 +26,16 @@ public final class ModItems {
 
     public static final RegistryObject<Item> ATM = ITEMS.register("atm",
             () -> new BlockItem(ModBlocks.ATM.get(), new Item.Properties()));
+
+    public static final RegistryObject<Item> NPC_WAND = ITEMS.register("npc_wand",
+            () -> new NpcWandItem(new Item.Properties().stacksTo(1).rarity(Rarity.EPIC)));
+
+    public static final RegistryObject<Item> SCRATCH_BRONZE = ITEMS.register("scratch_bronze",
+            () -> new ScratchItem(0, new Item.Properties().stacksTo(16)));
+    public static final RegistryObject<Item> SCRATCH_SILVER = ITEMS.register("scratch_silver",
+            () -> new ScratchItem(1, new Item.Properties().stacksTo(16).rarity(Rarity.UNCOMMON)));
+    public static final RegistryObject<Item> SCRATCH_GOLD = ITEMS.register("scratch_gold",
+            () -> new ScratchItem(2, new Item.Properties().stacksTo(16).rarity(Rarity.RARE)));
 
     public static final RegistryObject<Item> COIN_1 = money("coin_1", 1, Rarity.COMMON);
     public static final RegistryObject<Item> NOTE_5 = money("note_5", 5, Rarity.COMMON);

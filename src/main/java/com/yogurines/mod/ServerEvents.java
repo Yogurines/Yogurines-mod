@@ -45,6 +45,7 @@ public final class ServerEvents {
     public static void logout(PlayerEvent.PlayerLoggedOutEvent e) {
         if (!(e.getEntity() instanceof ServerPlayer p) || ServerLogic.server() == null) return;
         ServerLogic.clearCamera(p.getUUID());
+        com.yogurines.mod.scratch.ScratchServer.logout(p);
         CompoundTag o = new CompoundTag();
         o.putString("u", p.getUUID().toString());
         o.putInt("m", 0);
