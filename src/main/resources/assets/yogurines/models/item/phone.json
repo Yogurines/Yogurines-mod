@@ -1,6 +1,14 @@
 {
-  "parent": "minecraft:item/generated",
+  "parent": "item/generated",
   "textures": {
     "layer0": "yogurines:item/phone"
-  }
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "yogurines:on": 1
+      },
+      "model": "yogurines:item/phone_on"
+    }
+  ]
 }

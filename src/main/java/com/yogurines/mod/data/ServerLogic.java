@@ -31,6 +31,11 @@ public final class ServerLogic {
 
     public static MinecraftServer server() { return server; }
 
+    public static void clearCamera(UUID u) {
+        CAMERA_MODE.remove(u);
+        UPLOADS.remove(u);
+    }
+
     public static YoguData data() { return YoguData.get(server); }
 
     /** Ejecuta una tarea dentro de unos ticks (lo usan los perfiles falsos para "contestar"). */
