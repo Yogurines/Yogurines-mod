@@ -3,6 +3,8 @@ package com.yogurines.mod.block;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
@@ -62,6 +64,10 @@ public class AtmBlock extends HorizontalDirectionalBlock {
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         level.setBlock(pos.above(), state.setValue(HALF, DoubleBlockHalf.UPPER), Block.UPDATE_ALL);
+        if (!level.isClientSide) {
+            // Toque metálico suave encima del sonido normal de colocar: yunque muy bajito y agudo.
+            level.playSound(null, pos, SoundEvents.ANVIL_PLACE, SoundSource.BLOCKS, 0.12F, 1.75F);
+        }
     }
 
     @Override
@@ -86,8 +92,11 @@ public class AtmBlock extends HorizontalDirectionalBlock {
 
     @Override
     public void playerWillDestroy(Level level, BlockPos pos, BlockState state, Player player) {
-        // En creativo, al romper la parte de arriba quitamos la de abajo sin que suelte nada.
-        if (!level.isClientSide && player.isCreative() && state.getValue(HALF) == DoubleBlockHalf.UPPER) {
+        // En creativo, al romper la parte de arriba quitamos la de abajo sin que suelte nada
+        // (si no, al quedarse sin la otra mitad se rompería "sola" y soltaría el cajero).
+        // Lo mismo si se rompe sin pico. En supervivencia solo suelta la mitad de abajo (ver la loot table), así nunca sale doble.
+        if (!level.isClientSide && state.getValue(HALF) == DoubleBlockHalf.UPPER
+                && (player.isCreative() || !player.hasCorrectToolForDrops(state))) {
             BlockPos below = pos.below();
             BlockState belowState = level.getBlockState(below);
             if (belowState.is(this) && belowState.getValue(HALF) == DoubleBlockHalf.LOWER) {
