@@ -157,12 +157,12 @@ public final class CameraMode {
         if (!active || capture) return;
         Minecraft mc = Minecraft.getInstance();
         Font font = mc.font;
-        int c = 0xCCFFFFFF, m = 14, L = 16;
+        int c = 0xCCFFFFFF, m = 14, len = 16;
         // esquinas del visor
-        g.fill(m, m, m + L, m + 1, c); g.fill(m, m, m + 1, m + L, c);
-        g.fill(sw - m - L, m, sw - m, m + 1, c); g.fill(sw - m - 1, m, sw - m, m + L, c);
-        g.fill(m, sh - m - 1, m + L, sh - m, c); g.fill(m, sh - m - L, m + 1, sh - m, c);
-        g.fill(sw - m - L, sh - m - 1, sw - m, sh - m, c); g.fill(sw - m - 1, sh - m - L, sw - m, sh - m, c);
+        g.fill(m, m, m + len, m + 1, c); g.fill(m, m, m + 1, m + len, c);
+        g.fill(sw - m - len, m, sw - m, m + 1, c); g.fill(sw - m - 1, m, sw - m, m + len, c);
+        g.fill(m, sh - m - 1, m + len, sh - m, c); g.fill(m, sh - m - len, m + 1, sh - m, c);
+        g.fill(sw - m - len, sh - m - 1, sw - m, sh - m, c); g.fill(sw - m - 1, sh - m - len, sw - m, sh - m, c);
         // centro
         g.fill(sw / 2 - 4, sh / 2, sw / 2 + 5, sh / 2 + 1, 0x88FFFFFF);
         g.fill(sw / 2, sh / 2 - 4, sw / 2 + 1, sh / 2 + 5, 0x88FFFFFF);
