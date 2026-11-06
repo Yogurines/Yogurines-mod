@@ -1,5 +1,6 @@
 package com.yogurines.mod.data;
 
+import com.yogurines.mod.Tr;
 import com.yogurines.mod.item.Money;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,18 +20,18 @@ public final class FakeProfiles {
         return UUID.nameUUIDFromBytes(("yogurines-fake:" + nick).getBytes(StandardCharsets.UTF_8));
     }
 
-    public static final Fake LUNA = new Fake(uid("LunaPixel"), "LunaPixel", "Luna", "Constructora de casitas bonitas ☾",
+    public static final Fake LUNA = new Fake(uid("LunaPixel"), "LunaPixel", "Luna", Tr.of("Constructora de casitas bonitas ☾"),
             "luna", new String[]{"post_luna1", "post_luna2"},
-            new String[]{"Mi casita nueva junto al lago ⌂", "Atardecer desde la montaña ✦"},
-            new String[]{"¡Holaa! ¿Qué tal todo? ☺", "Jajaja me encanta", "¿Quedamos luego en el spawn?", "Ahora mismo estoy construyendo, luego te escribo ⚒", "¡Qué guay!"});
-    public static final Fake CREEPER = new Fake(uid("CreeperKing99"), "CreeperKing99", "Creeper King", "Sssss... ✸ Rey de las explosiones",
+            new String[]{Tr.of("Mi casita nueva junto al lago ⌂"), Tr.of("Atardecer desde la montaña ✦")},
+            new String[]{Tr.of("¡Holaa! ¿Qué tal todo? ☺"), Tr.of("Jajaja me encanta"), Tr.of("¿Quedamos luego en el spawn?"), Tr.of("Ahora mismo estoy construyendo, luego te escribo ⚒"), Tr.of("¡Qué guay!")});
+    public static final Fake CREEPER = new Fake(uid("CreeperKing99"), "CreeperKing99", "Creeper King", Tr.of("Sssss... ✸ Rey de las explosiones"),
             "creeper", new String[]{"post_creeper1", "post_creeper2"},
-            new String[]{"Nueva granja de pólvora ✸", "Encontré diamantes en la cueva ◆"},
-            new String[]{"Sssss... ✸", "¿Te vienes a minar?", "No toques mi TNT", "jajaja buena esa", "Estoy en la mina, cambio y corto"});
-    public static final Fake FAN = new Fake(uid("YoguFan"), "YoguFan", "Yogurín Fan", "Fan nº1 de Yotu, Samu y Metta ♥",
+            new String[]{Tr.of("Nueva granja de pólvora ✸"), Tr.of("Encontré diamantes en la cueva ◆")},
+            new String[]{Tr.of("Sssss... ✸"), Tr.of("¿Te vienes a minar?"), Tr.of("No toques mi TNT"), Tr.of("jajaja buena esa"), Tr.of("Estoy en la mina, cambio y corto")});
+    public static final Fake FAN = new Fake(uid("YoguFan"), "YoguFan", "Yogurín Fan", Tr.of("Fan nº1 de Yotu, Samu y Metta ♥"),
             "yogufan", new String[]{"post_yogufan1"},
-            new String[]{"¡Mi colección de billetes Yogurines! $"},
-            new String[]{"¡¡Holaa!! ♥", "¿Has visto el billete de 500? Es una pasada", "Yo ahorro todo en el banco Yogurín $", "¡Me encanta este server!", "Te sigo ☺"});
+            new String[]{Tr.of("¡Mi colección de billetes Yogurines! $")},
+            new String[]{Tr.of("¡¡Holaa!! ♥"), Tr.of("¿Has visto el billete de 500? Es una pasada"), Tr.of("Yo ahorro todo en el banco Yogurín $"), Tr.of("¡Me encanta este server!"), Tr.of("Te sigo ☺")});
 
     public static final List<Fake> ALL = List.of(LUNA, CREEPER, FAN);
 
@@ -86,17 +87,17 @@ public final class FakeProfiles {
                 YoguData.Comment c = new YoguData.Comment();
                 Fake by = ALL.get((ALL.indexOf(f) + 1) % ALL.size());
                 c.author = by.id();
-                c.text = pick(new String[]{"¡Qué pasada! ♥", "Brutal ✦", "Me encanta", "Quiero ir"});
+                c.text = pick(new String[]{Tr.of("¡Qué pasada! ♥"), Tr.of("Brutal ✦"), Tr.of("Me encanta"), Tr.of("Quiero ir")});
                 c.time = post.time + 600_000L;
                 post.comments.add(c);
                 d.posts.add(post);
             }
             for (Fake f : ALL) {
                 for (Fake other : ALL) if (other != f) d.profile(f.id()).following.add(other.id());
-                if (d.bal(f.id()) <= 0) d.addTx(f.id(), 1000, "", "Saldo inicial");
+                if (d.bal(f.id()) <= 0) d.addTx(f.id(), 1000, "", Tr.of("Saldo inicial"));
             }
-            d.addChat(LUNA.id(), CREEPER.id(), "¿Me devuelves mi pico de diamante?", "text");
-            d.addChat(CREEPER.id(), LUNA.id(), "Sssss... no sé de qué me hablas ✸", "text");
+            d.addChat(LUNA.id(), CREEPER.id(), Tr.of("¿Me devuelves mi pico de diamante?"), "text");
+            d.addChat(CREEPER.id(), LUNA.id(), Tr.of("Sssss... no sé de qué me hablas ✸"), "text");
         }
         d.setDirty();
     }
@@ -108,15 +109,15 @@ public final class FakeProfiles {
         if (!d.welcomed.add(me)) return;
         d.setDirty();
         ServerLogic.later(200, () -> {
-            say(LUNA, me, "¡Hola " + p.getGameProfile().getName() + "!  Bienvenid@ al server. Te dejo 50 Y para que empieces");
-            gift(LUNA, me, 50, "Regalo de bienvenida");
+            say(LUNA, me, Tr.of("¡Hola %s! Bienvenid@ al server. Te dejo 50 Y para que empieces", p.getGameProfile().getName()));
+            gift(LUNA, me, 50, Tr.of("Regalo de bienvenida"));
         });
         ServerLogic.later(500, () -> {
             YoguData dd = ServerLogic.data();
             if (dd.profile(CREEPER.id()).following.add(me)) {
                 dd.setDirty();
                 ServerLogic.broadcastSnap();
-                ServerLogic.notify(me, "social", "@" + CREEPER.nick(), "ha empezado a seguirte");
+                ServerLogic.notifyFrom(me, CREEPER.id(), "social", "@" + CREEPER.nick(), Tr.of("ha empezado a seguirte"));
             }
         });
     }
@@ -131,7 +132,7 @@ public final class FakeProfiles {
                 if (p == null || !p.likes.add(f.id())) return;
                 d.setDirty();
                 ServerLogic.broadcastSnap();
-                ServerLogic.notify(p.author, "social", "@" + f.nick(), "le ha dado like a tu foto");
+                ServerLogic.notifyFrom(p.author, f.id(), "social", "@" + f.nick(), Tr.of("le ha dado like a tu foto"));
             });
             delay += 80 + RNG.nextInt(160);
         }
@@ -142,12 +143,12 @@ public final class FakeProfiles {
             if (p == null) return;
             YoguData.Comment cm = new YoguData.Comment();
             cm.author = c.id();
-            cm.text = pick(new String[]{"¡Qué buena foto!", "Brutal ✦", "Me encanta ♥", "Top", "¿Dónde es eso?"});
+            cm.text = pick(new String[]{Tr.of("¡Qué buena foto!"), Tr.of("Brutal ✦"), Tr.of("Me flipa ♥"), Tr.of("Top"), Tr.of("¿Dónde es eso?")});
             cm.time = System.currentTimeMillis();
             p.comments.add(cm);
             d.setDirty();
             ServerLogic.broadcastSnap();
-            ServerLogic.notify(p.author, "social", "@" + c.nick(), "ha comentado: \"" + cm.text + "\"");
+            ServerLogic.notifyFrom(p.author, c.id(), "social", "@" + c.nick(), Tr.of("ha comentado: \"%s\"", cm.text));
         });
     }
 
@@ -156,9 +157,9 @@ public final class FakeProfiles {
         if (f == null) return;
         String t = text.toLowerCase(Locale.ROOT);
         String reply;
-        if (t.contains("hola") || t.contains("buenas") || t.contains("hey")) reply = "¡Hola! ☺ ¿Qué tal?";
-        else if (t.contains("dinero") || t.contains("yogur") || t.contains("pasta")) reply = "Yo guardo todo en el banco, que en el bolsillo se pierde $";
-        else if (t.endsWith("?")) reply = pick(new String[]{"Mmm... ¡creo que sí!", "Ni idea jajaja", "¡Claro!"});
+        if (t.contains("hola") || t.contains("buenas") || t.contains("hey") || t.contains("hello") || t.startsWith("hi")) reply = Tr.of("¡Hola! ☺ ¿Qué tal?");
+        else if (t.contains("dinero") || t.contains("yogur") || t.contains("pasta") || t.contains("money")) reply = Tr.of("Yo guardo todo en el banco, que en el bolsillo se pierde $");
+        else if (t.endsWith("?")) reply = pick(new String[]{Tr.of("Mmm... ¡creo que sí!"), Tr.of("Ni idea jajaja"), Tr.of("¡Claro!")});
         else reply = pick(f.replies());
         ServerLogic.later(40 + RNG.nextInt(60), () -> say(f, from, reply));
     }
@@ -166,7 +167,7 @@ public final class FakeProfiles {
     public static void onTransfer(UUID fake, UUID from, long amount) {
         Fake f = byId(fake);
         if (f == null) return;
-        ServerLogic.later(60, () -> say(f, from, "¡Gracias por los " + Money.fmt(amount) + " Y! ♥"));
+        ServerLogic.later(60, () -> say(f, from, Tr.of("¡Gracias por los %s Y! ♥", Money.fmt(amount))));
     }
 
     private static void say(Fake f, UUID to, String text) {
@@ -174,18 +175,18 @@ public final class FakeProfiles {
         d.addChat(f.id(), to, text, "text");
         ServerPlayer p = ServerLogic.online(to);
         if (p != null) ServerLogic.sendSnap(p);
-        ServerLogic.notify(to, "chat", "@" + f.nick(), text);
+        ServerLogic.notifyFrom(to, f.id(), "chat", "@" + f.nick(), text);
     }
 
     private static void gift(Fake f, UUID to, long amount, String concept) {
         YoguData d = ServerLogic.data();
         d.addTx(f.id(), -amount, to.toString(), concept);
         d.addTx(to, amount, f.id().toString(), concept);
-        d.addChat(f.id(), to, Money.fmt(amount) + " Y · " + concept, "transfer");
+        d.addChat(f.id(), to, Tr.of("%s Y · %s", Money.fmt(amount), concept), "transfer");
         ServerPlayer p = ServerLogic.online(to);
         if (p != null) ServerLogic.sendSnap(p);
-        ServerLogic.notify(to, "bank", "Banco Yogurín", "@" + f.nick() + " te ha enviado " + Money.fmt(amount) + " Y");
-        if (d.bal(f.id()) < 200) d.addTx(f.id(), 1000, "", "Saldo inicial");
+        ServerLogic.notifyFrom(to, f.id(), "bank", Tr.of("Banco Yogurín"), Tr.of("@%s te ha enviado %s Y", f.nick(), Money.fmt(amount)));
+        if (d.bal(f.id()) < 200) d.addTx(f.id(), 1000, "", Tr.of("Saldo inicial"));
     }
 
     private static String pick(String[] a) {

@@ -20,11 +20,12 @@ public final class ClientNet {
                 String app = t.getString("app");
                 // si ya estás mirando ese chat no hace falta el aviso
                 if (Minecraft.getInstance().screen instanceof PhoneScreen ps && ps.isShowing(app, t.getString("title"))) return;
-                Toasts.push(app, t.getString("title"), t.getString("text"));
+                Toasts.push(app, L.tr(t.getString("title")), L.tr(t.getString("text")));
             }
             case "fx" -> fx(t);
+            case "err" -> PhoneScreen.flashStatus(L.tr(t.getString("r")));
             case "bank_err" -> {
-                ClientData.bankError = t.getString("r");
+                ClientData.bankError = L.tr(t.getString("r"));
                 ClientData.bankErrorTime = System.currentTimeMillis();
             }
             case "hidden" -> {
@@ -54,13 +55,13 @@ public final class ClientNet {
                 if (t.getInt("n") > 0) play(ModSounds.ATM_BILL.get(), 0);
                 if (t.getInt("c") > 0) play(ModSounds.ATM_COIN.get(), 0);
                 play(ModSounds.ATM_OK.get(), 0);
-                AtmScreen.flash("Ingresado: " + com.yogurines.mod.item.Money.fmt(t.getLong("v")) + " Y");
+                AtmScreen.flash(L.t("Ingresado: %s Y", com.yogurines.mod.item.Money.fmt(t.getLong("v"))));
             }
             case "withdraw" -> {
                 if (t.getInt("n") > 0) play(ModSounds.ATM_BILL.get(), 0);
                 if (t.getInt("c") > 0) play(ModSounds.ATM_COIN.get(), 0);
                 play(ModSounds.ATM_OK.get(), 0);
-                AtmScreen.flash("Retira tu dinero");
+                AtmScreen.flash(L.t("Retira tu dinero"));
             }
             case "sent" -> play(ModSounds.TRANSFER_SENT.get(), 0);
             case "wallet_in", "bill" -> play(ModSounds.ATM_BILL.get(), 0);

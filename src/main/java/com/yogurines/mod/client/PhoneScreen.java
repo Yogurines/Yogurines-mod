@@ -34,7 +34,7 @@ public class PhoneScreen extends PixelScreen {
     private static final int[][] WALLS = {
             {0xFFFFB3C7, 0xFFFFD9A8}, {0xFF1E2A5A, 0xFF5B2A86}, {0xFF2BB5A0, 0xFF8BE08A},
             {0xFFFF8A4C, 0xFF7A3EA8}, {0xFF2B2E35, 0xFF15171B}, {0xFF6EC3FF, 0xFFE3F4FF}};
-    private static final String[] WALL_NAMES = {"Yogur", "Noche", "Menta", "Atardecer", "Grafito", "Cielo"};
+    private static final String[] WALL_NAMES = {L.t("Yogur"), L.t("Noche"), L.t("Menta"), L.t("Atardecer"), L.t("Grafito"), L.t("Cielo")};
     private static final Map<UUID, Long> LAST_READ = new HashMap<>();
 
     private record Hit(int x, int y, int w, int h, Runnable r) {}
@@ -77,11 +77,11 @@ public class PhoneScreen extends PixelScreen {
     private BufferedImage cropSrc;
     private int cropX, cropY, cropSize;
     private BufferedImage pendingAvatar;
-    private String status = "";
-    private long statusTime;
+    private static String status = "";
+    private static long statusTime;
 
     public PhoneScreen(Page start) {
-        super("Móvil");
+        super(L.t("Móvil"));
         page = start;
         if (start == Page.YOGUGRAM) openYogugram(false);
     }
@@ -97,6 +97,7 @@ public class PhoneScreen extends PixelScreen {
     // ---------- navegación ----------
 
     private void go(Page p) {
+        chatMenu = false;
         back.push(page);
         page = p;
         scroll = 0;
@@ -131,6 +132,11 @@ public class PhoneScreen extends PixelScreen {
             inBio.set(me.bio);
         }
         if (push) go(p); else page = p;
+    }
+
+    public static void flashStatus(String s) {
+        status = s;
+        statusTime = System.currentTimeMillis();
     }
 
     private void say(String s) {
@@ -254,7 +260,7 @@ public class PhoneScreen extends PixelScreen {
         }
         String t = in.b.toString();
         boolean blink = f && (System.currentTimeMillis() / 500) % 2 == 0;
-        if (t.isEmpty() && !f) text(fit(in.hint, w - 8), x + 4, y + 4, MUTED);
+        if (t.isEmpty() && !f) text(fit(L.t(in.hint), w - 8), x + 4, y + 4, MUTED);
         else {
             String shown = t;
             while (font.width(shown + "_") > w - 8 && shown.length() > 0) shown = shown.substring(1);
@@ -302,10 +308,10 @@ public class PhoneScreen extends PixelScreen {
 
     private static String ago(long time) {
         long d = (System.currentTimeMillis() - time) / 60000;
-        if (d < 1) return "ahora";
-        if (d < 60) return "hace " + d + " min";
-        if (d < 1440) return "hace " + (d / 60) + " h";
-        return "hace " + (d / 1440) + " d";
+        if (d < 1) return L.t("ahora");
+        if (d < 60) return L.t("hace %s min", d);
+        if (d < 1440) return L.t("hace %s h", d / 60);
+        return L.t("hace %s d", d / 1440);
     }
 
     /** Empieza una zona con scroll: devuelve la y de inicio del contenido. */
@@ -335,8 +341,8 @@ public class PhoneScreen extends PixelScreen {
         drawWallpaper(SX, SY, SW, SH);
         String time = clock();
         textScaled(time, SX + SW / 2f, SY + 34, 3f, 0xFFFFFFFF, true);
-        textScaled("Día " + day() + "  ·  Yogurines", SX + SW / 2f, SY + 62, 1f, 0xDDFFFFFF, true);
-        String[] names = {"Cámara", "Galería", "Yogugram", "YoguChat", "Banco", "Ajustes"};
+        textScaled(L.t("Día %s", day()) + "  ·  Yogurines", SX + SW / 2f, SY + 62, 1f, 0xDDFFFFFF, true);
+        String[] names = {L.t("Cámara"), L.t("Galería"), "Yogugram", "YoguChat", L.t("Banco"), L.t("Ajustes")};
         for (int i = 0; i < 6; i++) {
             int col = i % 3, row = i / 3;
             int x = SX + 15 + col * 50, y = SY + 104 + row * 62;
@@ -355,7 +361,7 @@ public class PhoneScreen extends PixelScreen {
         }
         // saldo rápido abajo
         round(SX + 14, BOTTOM - 40, SW - 28, 26, 8, 0x55000000);
-        text("Saldo", SX + 22, BOTTOM - 36, 0xCCFFFFFF);
+        text(L.t("Saldo"), SX + 22, BOTTOM - 36, 0xCCFFFFFF);
         text(Money.fmt(ClientData.balance) + " Y", SX + 22, BOTTOM - 26, 0xFFFFFFFF);
         right("@" + (ClientData.self() == null ? "" : ClientData.self().nick), SX + SW - 22, BOTTOM - 31, 0xCCFFFFFF);
     }
@@ -455,7 +461,7 @@ public class PhoneScreen extends PixelScreen {
             case 0 -> CameraMode.enter();
             case 1 -> go(Page.GALLERY);
             case 2 -> openYogugram(true);
-            case 3 -> go(Page.CHATS);
+            case 3 -> { if (page != Page.CHATS) go(Page.CHATS); }
             case 4 -> go(Page.BANK);
             default -> go(Page.SETTINGS);
         }
@@ -470,6 +476,8 @@ public class PhoneScreen extends PixelScreen {
     private boolean unread(UUID u) {
         List<ClientData.Msg> l = ClientData.chats.get(u);
         if (l == null || l.isEmpty()) return false;
+        ClientData.User cu = ClientData.user(u);
+        if (cu != null && (cu.muted || cu.blocked)) return false;
         ClientData.Msg last = l.get(l.size() - 1);
         return !last.from.equals(ClientData.me) && last.time > LAST_READ.getOrDefault(u, 0L);
     }
@@ -477,14 +485,15 @@ public class PhoneScreen extends PixelScreen {
     // ---------- galería ----------
 
     private void drawGallery(boolean pick) {
-        appBar(pick ? (pickForWallpaper ? "Elige un fondo" : "Elige una foto") : "Galería", INK);
+        appBar(pick ? (pickForWallpaper ? L.t("Elige un fondo") : L.t("Elige una foto")) : L.t("Galería"), INK);
         List<String> list = Gallery.list();
         int top = TOP + 19;
-        int y0 = beginScroll(top);
+        boolean tabs = pick && !pickForWallpaper && gramContext();
+        int y0 = beginScroll(top, tabs ? BOTTOM - TABS_H : BOTTOM);
         int y = y0 + 3;
         if (list.isEmpty()) {
-            center("Aún no tienes fotos", SX + SW / 2, y + 40, MUTED);
-            center("Abre la Cámara para hacer una", SX + SW / 2, y + 52, MUTED);
+            center(L.t("Aún no tienes fotos"), SX + SW / 2, y + 40, MUTED);
+            center(L.t("Abre la Cámara para hacer una"), SX + SW / 2, y + 52, MUTED);
             y += 70;
         }
         for (int i = 0; i < list.size(); i++) {
@@ -505,7 +514,7 @@ public class PhoneScreen extends PixelScreen {
                     ClientData.wallpaper = "gal:" + n;
                     ClientData.save();
                     pickForWallpaper = false;
-                    say("Fondo cambiado");
+                    say(L.t("Fondo cambiado"));
                     goBack();
                 } else {
                     inCaption.set("");
@@ -515,6 +524,7 @@ public class PhoneScreen extends PixelScreen {
             });
         }
         endScroll(top, y + ((list.size() + 2) / 3) * 33 + 4);
+        if (tabs) drawTabs(Page.PICK_PHOTO);
     }
 
     private void drawPhoto() {
@@ -526,21 +536,21 @@ public class PhoneScreen extends PixelScreen {
         int iy = TOP + 60;
         if (t != null) image(t, SX, iy, SW, ih);
         int by = iy + ih + 24;
-        button("Publicar en Yogugram", SX + 12, by, SW - 24, 18, PINK, 0xFFFFFFFF, () -> {
+        button(L.t("Publicar en Yogugram"), SX + 12, by, SW - 24, 18, PINK, 0xFFFFFFFF, () -> {
             ClientData.User me = ClientData.self();
             if (me != null && !me.created) { openYogugram(true); return; }
             inCaption.set("");
             go(Page.NEW_POST);
         });
-        button("Poner de fondo", SX + 12, by + 24, SW - 24, 18, 0xFF3A3D44, 0xFFFFFFFF, () -> {
+        button(L.t("Poner de fondo"), SX + 12, by + 24, SW - 24, 18, 0xFF3A3D44, 0xFFFFFFFF, () -> {
             ClientData.wallpaper = "gal:" + galName;
             ClientData.save();
-            say("Fondo cambiado");
+            say(L.t("Fondo cambiado"));
         });
-        button("Borrar", SX + 12, by + 48, SW - 24, 18, 0xFF5A2020, 0xFFFF9A9A, () -> {
+        button(L.t("Borrar"), SX + 12, by + 48, SW - 24, 18, 0xFF5A2020, 0xFFFF9A9A, () -> {
             if (ClientData.wallpaper.equals("gal:" + galName)) { ClientData.wallpaper = "0"; ClientData.save(); }
             Gallery.delete(galName);
-            say("Foto borrada");
+            say(L.t("Foto borrada"));
             goBack();
         });
     }
@@ -564,10 +574,12 @@ public class PhoneScreen extends PixelScreen {
         int top = TOP + 21;
         int y = beginScroll(top, BOTTOM - TABS_H) + 6;
         if (ClientData.posts.isEmpty()) {
-            center("Todavía no hay fotos", SX + SW / 2, y + 40, MUTED);
+            center(L.t("Todavía no hay fotos"), SX + SW / 2, y + 40, MUTED);
             y += 70;
         }
         for (ClientData.Post p : ClientData.posts) {
+            ClientData.User au = ClientData.user(p.author);
+            if (au != null && au.blocked) continue;
             y = postCard(p, y, false) + 8;
         }
         endScroll(top, y);
@@ -587,8 +599,8 @@ public class PhoneScreen extends PixelScreen {
         rect(SX, y, SW, TABS_H, CARD);
         rect(SX, y, SW, 1, LINE);
         int tw = SW / 5;
-        String[] names = {"Inicio", "Buscar", "Publicar", "Mensajes", "Perfil"};
-        boolean[] on = {active == Page.YOGUGRAM, active == Page.SEARCH, false, false,
+        String[] names = {L.t("Inicio"), L.t("Buscar"), L.t("Publicar"), L.t("Mensajes"), L.t("Perfil")};
+        boolean[] on = {active == Page.YOGUGRAM, active == Page.SEARCH, active == Page.PICK_PHOTO, active == Page.CHATS,
                 active == Page.PROFILE && ClientData.me != null && ClientData.me.equals(profileUser)};
         for (int i = 0; i < 5; i++) {
             int cx = SX + i * tw + tw / 2;
@@ -626,8 +638,8 @@ public class PhoneScreen extends PixelScreen {
                 switch (idx) {
                     case 0 -> { if (page != Page.YOGUGRAM) { tap(); back.clear(); back.push(Page.HOME); page = Page.YOGUGRAM; scroll = 0; focus = null; } else scroll = 0; }
                     case 1 -> { if (page != Page.SEARCH) { inSearch.set(""); go(Page.SEARCH); focus = inSearch; } }
-                    case 2 -> newPost();
-                    case 3 -> go(Page.CHATS);
+                    case 2 -> { if (page != Page.PICK_PHOTO && page != Page.NEW_POST) newPost(); }
+                    case 3 -> { if (page != Page.CHATS) go(Page.CHATS); }
                     default -> { profileUser = ClientData.me; if (page != Page.PROFILE) go(Page.PROFILE); }
                 }
             });
@@ -658,12 +670,12 @@ public class PhoneScreen extends PixelScreen {
             text(fit(u.display, SW - 70), SX + 36, y + 6, INK);
             text(fit("@" + u.nick, SW - 70), SX + 36, y + 16, MUTED);
             ClientData.User me = ClientData.self();
-            if (me != null && me.following.contains(u.id)) right("Siguiendo", SX + SW - 10, y + 11, MUTED);
+            if (me != null && me.following.contains(u.id)) right(L.t("Siguiendo"), SX + SW - 10, y + 11, MUTED);
             UUID id = u.id;
             hit(SX + 5, y, SW - 10, 30, () -> { profileUser = id; go(Page.PROFILE); });
             y += 34;
         }
-        if (n == 0) { center("Nadie se llama así", SX + SW / 2, y + 20, MUTED); y += 40; }
+        if (n == 0) { center(L.t("Nadie se llama así"), SX + SW / 2, y + 20, MUTED); y += 40; }
         endScroll(top, y);
         drawTabs(Page.SEARCH);
     }
@@ -695,7 +707,7 @@ public class PhoneScreen extends PixelScreen {
         int ih = w * 9 / 16;
         Images.Tex t = Images.get(p.img);
         if (t != null) imageCover(t, x, y, w, ih);
-        else { rect(x, y, w, ih, 0xFFE9EBEF); center("Cargando…", x + w / 2, y + ih / 2 - 4, MUTED); }
+        else { rect(x, y, w, ih, 0xFFE9EBEF); center(L.t("Cargando…"), x + w / 2, y + ih / 2 - 4, MUTED); }
         int pid = p.id;
         if (!detail) hit(x, y, w, ih, () -> { postId = pid; go(Page.POST); });
         y += ih + 4;
@@ -708,7 +720,7 @@ public class PhoneScreen extends PixelScreen {
             Net.toServer("like", o);
             if (!liked) sound(ModSounds.LIKE.get(), 1f, 0.8f);
         });
-        String cm = "Comentarios (" + p.comments.size() + ")";
+        String cm = L.t("Comentarios (%s)", p.comments.size());
         boolean hc = hover(x + 46, y, font.width(cm) + 6, 12);
         text(cm, x + 48, y + 2, hc ? BLUE : MUTED);
         if (!detail) hit(x + 46, y, font.width(cm) + 6, 12, () -> { postId = pid; go(Page.POST); });
@@ -732,7 +744,7 @@ public class PhoneScreen extends PixelScreen {
     }
 
     private void drawPost() {
-        appBar("Publicación", INK);
+        appBar(L.t("Publicación"), INK);
         ClientData.Post p = findPost(postId);
         if (p == null) return;
         int top = TOP + 19;
@@ -746,7 +758,7 @@ public class PhoneScreen extends PixelScreen {
         y = postCard(p, y, true);
         rect(SX + 6, y, SW - 12, 1, LINE);
         y += 5;
-        if (p.comments.isEmpty()) { text("Sé el primero en comentar", SX + 7, y, MUTED); y += 12; }
+        if (p.comments.isEmpty()) { text(L.t("Sé el primero en comentar"), SX + 7, y, MUTED); y += 12; }
         for (ClientData.Comment c : p.comments) {
             if (y > top - 20 && y < bottom) avatar(c.author, SX + 6, y, 12);
             List<FormattedCharSequence> lines = Toasts.wrap(font, ClientData.display(c.author) + ": " + c.text, SW - 30, 4);
@@ -765,7 +777,7 @@ public class PhoneScreen extends PixelScreen {
         rect(SX, bottom, SW, 22, CARD);
         rect(SX, bottom, SW, 1, LINE);
         field(inComment, SX + 5, bottom + 3, SW - 44);
-        button("Enviar", SX + SW - 37, bottom + 3, 32, 16, PINK, 0xFFFFFFFF, this::sendComment);
+        button(L.t("Enviar"), SX + SW - 37, bottom + 3, 32, 16, PINK, 0xFFFFFFFF, this::sendComment);
     }
 
     private void sendComment() {
@@ -780,7 +792,7 @@ public class PhoneScreen extends PixelScreen {
 
     private void drawProfile() {
         ClientData.User u = ClientData.user(profileUser);
-        appBar(u == null ? "Perfil" : "@" + u.nick, INK);
+        appBar(u == null ? L.t("Perfil") : "@" + u.nick, INK);
         if (u == null) return;
         int top = TOP + 19;
         int y = beginScroll(top, BOTTOM - TABS_H);
@@ -789,19 +801,19 @@ public class PhoneScreen extends PixelScreen {
         int posts = 0;
         List<ClientData.Post> mine = new ArrayList<>();
         for (ClientData.Post p : ClientData.posts) if (p.author.equals(u.id)) { posts++; mine.add(p); }
-        stat(SX + 76, y + 14, posts, "fotos");
-        stat(SX + 106, y + 14, ClientData.followers(u.id), "seguid.");
-        stat(SX + 140, y + 14, u.following.size(), "sigue");
+        stat(SX + 76, y + 14, posts, L.t("fotos"));
+        stat(SX + 106, y + 14, ClientData.followers(u.id), L.t("seguid."));
+        stat(SX + 140, y + 14, u.following.size(), L.t("sigue"));
         y += 52;
         text(fit(u.display, SW - 20), SX + 10, y, INK);
-        if (u.online && !u.id.equals(ClientData.me)) right("● en línea", SX + SW - 10, y, GREEN);
+        if (u.online && !u.id.equals(ClientData.me)) right("● " + L.t("en línea"), SX + SW - 10, y, GREEN);
         y += 10;
         if (!u.bio.isEmpty()) {
             for (FormattedCharSequence l : Toasts.wrap(font, u.bio, SW - 20, 3)) { text(l, SX + 10, y, MUTED); y += 10; }
         }
         y += 4;
         if (u.id.equals(ClientData.me)) {
-            button("Editar perfil", SX + 10, y, SW - 20, 16, 0xFFE3E5EA, INK, () -> {
+            button(L.t("Editar perfil"), SX + 10, y, SW - 20, 16, 0xFFE3E5EA, INK, () -> {
                 inName.set(u.display);
                 inBio.set(u.bio);
                 pendingAvatar = null;
@@ -810,13 +822,13 @@ public class PhoneScreen extends PixelScreen {
         } else {
             ClientData.User me = ClientData.self();
             boolean following = me != null && me.following.contains(u.id);
-            button(following ? "Siguiendo" : "Seguir", SX + 10, y, (SW - 26) / 2, 16, following ? 0xFFE3E5EA : BLUE, following ? INK : 0xFFFFFFFF, () -> {
+            button(following ? L.t("Siguiendo") : L.t("Seguir"), SX + 10, y, (SW - 26) / 2, 16, following ? 0xFFE3E5EA : BLUE, following ? INK : 0xFFFFFFFF, () -> {
                 CompoundTag o = new CompoundTag();
                 o.putString("u", u.id.toString());
                 o.putBoolean("on", !following);
                 Net.toServer("follow", o);
             });
-            button("Mensaje", SX + 16 + (SW - 26) / 2, y, (SW - 26) / 2, 16, 0xFFE3E5EA, INK, () -> {
+            button(L.t("Mensaje"), SX + 16 + (SW - 26) / 2, y, (SW - 26) / 2, 16, 0xFFE3E5EA, INK, () -> {
                 chatUser = u.id;
                 go(Page.CHAT);
             });
@@ -835,7 +847,7 @@ public class PhoneScreen extends PixelScreen {
             int pid = p.id;
             hit(x, yy, 54, 54, () -> { postId = pid; go(Page.POST); });
         }
-        if (mine.isEmpty()) { center("Sin fotos todavía", SX + SW / 2, y + 20, MUTED); y += 40; }
+        if (mine.isEmpty()) { center(L.t("Sin fotos todavía"), SX + SW / 2, y + 20, MUTED); y += 40; }
         endScroll(top, y + ((mine.size() + 2) / 3) * 55 + 4);
         drawTabs(Page.PROFILE);
     }
@@ -848,10 +860,10 @@ public class PhoneScreen extends PixelScreen {
     private void drawEditProfile() {
         ClientData.User me = ClientData.self();
         boolean first = me == null || !me.created;
-        appBar(first ? "Crea tu perfil" : "Editar perfil", PINK);
+        appBar(first ? L.t("Crea tu perfil") : L.t("Editar perfil"), PINK);
         int y = TOP + 28;
         if (first) {
-            center("¡Bienvenid@ a Yogugram!", SX + SW / 2, y, INK);
+            center(L.t("¡Bienvenid@ a Yogugram!"), SX + SW / 2, y, INK);
             y += 12;
         }
         int ax = SX + SW / 2 - 25;
@@ -862,17 +874,17 @@ public class PhoneScreen extends PixelScreen {
         cornerMask(ax, y, 50, 50);
         hit(ax, y, 50, 50, this::pickAvatar);
         y += 54;
-        button("Elegir foto del PC", SX + 30, y, SW - 60, 16, 0xFFE3E5EA, INK, this::pickAvatar);
+        button(L.t("Elegir foto del PC"), SX + 30, y, SW - 60, 16, 0xFFE3E5EA, INK, this::pickAvatar);
         y += 24;
-        text("Nombre visible", SX + 10, y, MUTED);
+        text(L.t("Nombre visible"), SX + 10, y, MUTED);
         field(inName, SX + 8, y + 10, SW - 16);
         y += 32;
-        text("@" + (me == null ? "" : me.nick) + "  (tu nick)", SX + 10, y, MUTED);
+        text("@" + (me == null ? "" : me.nick) + "  " + L.t("(tu nick)"), SX + 10, y, MUTED);
         y += 14;
-        text("Bio", SX + 10, y, MUTED);
+        text(L.t("Bio"), SX + 10, y, MUTED);
         field(inBio, SX + 8, y + 10, SW - 16);
         y += 36;
-        button(first ? "Crear perfil" : "Guardar", SX + 10, y, SW - 20, 18, PINK, 0xFFFFFFFF, this::saveProfile);
+        button(first ? L.t("Crear perfil") : L.t("Guardar"), SX + 10, y, SW - 20, 18, PINK, 0xFFFFFFFF, this::saveProfile);
     }
 
     private void saveProfile() {
@@ -885,7 +897,7 @@ public class PhoneScreen extends PixelScreen {
             pendingAvatar = null;
         }
         Net.toServer("profile", o);
-        say("Perfil guardado");
+        say(L.t("Perfil guardado"));
         back.clear();
         back.push(Page.HOME);
         page = Page.YOGUGRAM;
@@ -903,7 +915,7 @@ public class PhoneScreen extends PixelScreen {
                 f.put(stack.UTF8("*.jpg"));
                 f.put(stack.UTF8("*.jpeg"));
                 f.flip();
-                path = TinyFileDialogs.tinyfd_openFileDialog("Elige tu foto de perfil", "", f, "Imágenes (png, jpg)", false);
+                path = TinyFileDialogs.tinyfd_openFileDialog(L.t("Elige tu foto de perfil"), "", f, L.t("Imágenes (png, jpg)"), false);
             } catch (Throwable e) {
                 path = null;
             }
@@ -912,7 +924,7 @@ public class PhoneScreen extends PixelScreen {
             try { img = ImageIO.read(new File(path)); } catch (Exception e) { img = null; }
             BufferedImage fin = img;
             mc.execute(() -> {
-                if (fin == null) { say("No se ha podido abrir esa imagen"); return; }
+                if (fin == null) { say(L.t("No se ha podido abrir esa imagen")); return; }
                 startCrop(fin);
             });
         }, "yogurines-elegir-foto");
@@ -951,7 +963,7 @@ public class PhoneScreen extends PixelScreen {
         rect(SX, TOP, SW, 18, 0xFF000000);
         text("<", SX + 8, TOP + 5, 0xFFFFFFFF);
         hit(SX, TOP, 22, 18, this::goBack);
-        center("Recorta tu foto", SX + SW / 2, TOP + 5, 0xFFFFFFFF);
+        center(L.t("Recorta tu foto"), SX + SW / 2, TOP + 5, 0xFFFFFFFF);
         if (cropSrc == null) return;
         int[] a = cropArea();
         double k = a[4] / 1000.0;
@@ -964,9 +976,9 @@ public class PhoneScreen extends PixelScreen {
         rect(cx + cs, cy, a[0] + a[2] - cx - cs, cs, 0x99000000);
         rect(cx, cy, cs, 1, 0xFFFFFFFF); rect(cx, cy + cs - 1, cs, 1, 0xFFFFFFFF);
         rect(cx, cy, 1, cs, 0xFFFFFFFF); rect(cx + cs - 1, cy, 1, cs, 0xFFFFFFFF);
-        center("Arrastra para mover", SX + SW / 2, TOP + 216, 0xFFBBBBBB);
-        center("Rueda para hacer zoom", SX + SW / 2, TOP + 226, 0xFFBBBBBB);
-        button("Usar esta foto", SX + 20, TOP + 244, SW - 40, 18, PINK, 0xFFFFFFFF, () -> {
+        center(L.t("Arrastra para mover"), SX + SW / 2, TOP + 216, 0xFFBBBBBB);
+        center(L.t("Rueda para hacer zoom"), SX + SW / 2, TOP + 226, 0xFFBBBBBB);
+        button(L.t("Usar esta foto"), SX + 20, TOP + 244, SW - 40, 18, PINK, 0xFFFFFFFF, () -> {
             pendingAvatar = Images.crop(cropSrc, cropX, cropY, cropSize, 128);
             Images.put("avatar_pending", pendingAvatar);
             goBack();
@@ -974,7 +986,7 @@ public class PhoneScreen extends PixelScreen {
     }
 
     private void drawNewPost() {
-        appBar("Nueva publicación", PINK);
+        appBar(L.t("Nueva publicación"), PINK);
         int y = TOP + 24;
         Images.Tex t = galName == null ? null : Gallery.tex(galName);
         int ih = (SW - 12) * 9 / 16;
@@ -983,7 +995,13 @@ public class PhoneScreen extends PixelScreen {
         field(inCaption, SX + 6, y, SW - 12);
         if (focus == null) focus = inCaption;
         y += 24;
-        button("Publicar", SX + 10, y, SW - 20, 18, PINK, 0xFFFFFFFF, this::publish);
+        button(L.t("Publicar"), SX + 10, y, SW - 20, 18, PINK, 0xFFFFFFFF, this::publish);
+        if (gramContext()) drawTabs(Page.PICK_PHOTO);
+    }
+
+    /** ¿Se ha llegado aquí desde Yogugram? Entonces se mantienen sus pestañas de abajo. */
+    private boolean gramContext() {
+        return back.contains(Page.YOGUGRAM) || back.contains(Page.SEARCH);
     }
 
     private void publish() {
@@ -996,7 +1014,7 @@ public class PhoneScreen extends PixelScreen {
         o.putString("cap", inCaption.get());
         Net.toServer("post", o);
         inCaption.set("");
-        say("¡Publicado!");
+        say(L.t("¡Publicado!"));
         back.clear();
         back.push(Page.HOME);
         page = Page.YOGUGRAM;
@@ -1021,9 +1039,10 @@ public class PhoneScreen extends PixelScreen {
     private void drawChats() {
         appBar("YoguChat", 0xFF25C26E);
         int top = TOP + 19;
-        int y = beginScroll(top);
+        boolean tabs = gramContext();
+        int y = beginScroll(top, tabs ? BOTTOM - TABS_H : BOTTOM);
         List<ClientData.User> l = contacts();
-        if (l.isEmpty()) { center("No hay nadie más todavía", SX + SW / 2, y + 40, MUTED); y += 60; }
+        if (l.isEmpty()) { center(L.t("No hay nadie más todavía"), SX + SW / 2, y + 40, MUTED); y += 60; }
         for (ClientData.User u : l) {
             boolean h = hover(SX, y, SW, 28);
             rect(SX, y, SW, 28, h ? 0xFFEFF1F4 : CARD);
@@ -1031,24 +1050,27 @@ public class PhoneScreen extends PixelScreen {
             if (u.online) { rect(SX + 20, y + 19, 5, 5, CARD); rect(SX + 21, y + 20, 3, 3, GREEN); }
             text(fit(u.display, SW - 70), SX + 30, y + 5, INK);
             List<ClientData.Msg> m = ClientData.chats.get(u.id);
-            String prev = m == null || m.isEmpty() ? "@" + u.nick : (m.get(m.size() - 1).from.equals(ClientData.me) ? "Tú: " : "") + m.get(m.size() - 1).text;
+            String prev = m == null || m.isEmpty() ? "@" + u.nick : (m.get(m.size() - 1).from.equals(ClientData.me) ? L.t("Tú") + ": " : "") + L.tr(m.get(m.size() - 1).text);
             text(fit(prev, SW - 46), SX + 30, y + 15, MUTED);
             if (m != null && !m.isEmpty()) right(shortAgo(m.get(m.size() - 1).time), SX + SW - 6, y + 5, MUTED);
-            if (unread(u.id)) round(SX + SW - 12, y + 16, 6, 6, 3, 0xFF25C26E);
+            if (unread(u.id) && !u.muted) round(SX + SW - 12, y + 16, 6, 6, 3, 0xFF25C26E);
+            if (u.muted) textScaled(L.t("silenciado"), SX + SW - 6 - font.width(L.t("silenciado")) * 0.5f, y + 18, 0.5f, MUTED, false);
+            if (u.blocked) textScaled(L.t("bloqueado"), SX + SW - 6 - font.width(L.t("bloqueado")) * 0.5f, y + 18, 0.5f, 0xFFE53935, false);
             rect(SX + 30, y + 27, SW - 30, 1, LINE);
             UUID id = u.id;
             hit(SX, y, SW, 28, () -> { chatUser = id; go(Page.CHAT); });
             y += 28;
         }
         endScroll(top, y);
+        if (tabs) drawTabs(Page.CHATS);
     }
 
     private static String shortAgo(long time) {
         long d = (System.currentTimeMillis() - time) / 60000;
-        if (d < 1) return "ahora";
-        if (d < 60) return d + " min";
-        if (d < 1440) return (d / 60) + " h";
-        return (d / 1440) + " d";
+        if (d < 1) return L.t("ahora");
+        if (d < 60) return L.t("%s min", d);
+        if (d < 1440) return L.t("%s h", d / 60);
+        return L.t("%s d", d / 1440);
     }
 
     private void drawChat() {
@@ -1062,9 +1084,13 @@ public class PhoneScreen extends PixelScreen {
         hit(SX, TOP, 22, 22, this::goBack);
         avatar(u.id, SX + 20, TOP + 3, 16);
         text(fit(u.display, SW - 70), SX + 40, TOP + 3, INK);
-        text(u.online ? "en línea" : "desconectad@", SX + 40, TOP + 12, u.online ? GREEN : MUTED);
+        text(u.online ? L.t("en línea") : L.t("desconectad@"), SX + 40, TOP + 12, u.online ? GREEN : MUTED);
         UUID uid = u.id;
-        hit(SX + 20, TOP, SW - 40, 22, () -> { profileUser = uid; go(Page.PROFILE); });
+        hit(SX + 20, TOP, SW - 44, 22, () -> { profileUser = uid; go(Page.PROFILE); });
+        // tres puntos
+        boolean hm = hover(SX + SW - 20, TOP, 20, 22);
+        for (int k = 0; k < 3; k++) rect(SX + SW - 11, TOP + 6 + k * 4, 2, 2, hm || chatMenu ? 0xFF25C26E : INK);
+        hit(SX + SW - 20, TOP, 20, 22, () -> { tap(); chatMenu = !chatMenu; focus = null; });
         int top = TOP + 23, bottom = BOTTOM - 22;
         rect(SX, top, SW, bottom - top, 0xFFECE5DD);
         List<ClientData.Msg> msgs = ClientData.chats.getOrDefault(u.id, List.of());
@@ -1087,7 +1113,7 @@ public class PhoneScreen extends PixelScreen {
         clipBottom = bottom;
         clip(SX, top, SW, viewH);
         int y = top + Math.min(0, viewH - contentH) + scroll + 4;
-        if (msgs.isEmpty()) center("Escribe el primer mensaje", SX + SW / 2, top + viewH / 2, MUTED);
+        if (msgs.isEmpty()) center(L.t("Escribe el primer mensaje"), SX + SW / 2, top + viewH / 2, MUTED);
         for (Object[] o : laid) {
             ClientData.Msg m = (ClientData.Msg) o[0];
             @SuppressWarnings("unchecked") List<FormattedCharSequence> lines = (List<FormattedCharSequence>) o[1];
@@ -1108,9 +1134,48 @@ public class PhoneScreen extends PixelScreen {
         clipBottom = 10000;
         rect(SX, bottom, SW, 22, CARD);
         rect(SX, bottom, SW, 1, LINE);
-        if (focus == null) focus = inMsg;
-        field(inMsg, SX + 5, bottom + 3, SW - 44);
-        button("Enviar", SX + SW - 37, bottom + 3, 32, 16, 0xFF25C26E, 0xFFFFFFFF, this::sendMsg);
+        if (u.blocked) {
+            center(fit(L.t("Has bloqueado a esta persona"), SW - 10), SX + SW / 2, bottom + 3, MUTED);
+            String ub = L.t("Desbloquear");
+            boolean hu = hover(SX + SW / 2 - font.width(ub) / 2 - 3, bottom + 11, font.width(ub) + 6, 10);
+            center(ub, SX + SW / 2, bottom + 12, hu ? 0xFF1565C0 : BLUE);
+            hit(SX + SW / 2 - font.width(ub) / 2 - 3, bottom + 11, font.width(ub) + 6, 10, () -> setFlag("block", u.id, false));
+        } else if (u.blockedMe) {
+            center(fit(L.t("No puedes escribir a esta persona"), SW - 10), SX + SW / 2, bottom + 7, MUTED);
+        } else {
+            if (focus == null && !chatMenu) focus = inMsg;
+            field(inMsg, SX + 5, bottom + 3, SW - 44);
+            button(L.t("Enviar"), SX + SW - 37, bottom + 3, 32, 16, 0xFF25C26E, 0xFFFFFFFF, this::sendMsg);
+        }
+        // menú de opciones del chat (tres puntos arriba a la derecha)
+        if (chatMenu) {
+            int mx0 = SX + SW - 104, my0 = TOP + 22;
+            rect(SX, TOP + 23, SW, BOTTOM - TOP - 23, 0x22000000);
+            hit(SX, TOP + 23, SW, BOTTOM - TOP - 23, () -> chatMenu = false);
+            round(mx0 - 1, my0 - 1, 102, 46, 5, LINE);
+            round(mx0, my0, 100, 44, 5, CARD);
+            menuItem(u.muted ? L.t("Quitar silencio") : L.t("Silenciar"), mx0, my0 + 2, INK, () -> setFlag("mute", u.id, !u.muted));
+            menuItem(u.blocked ? L.t("Desbloquear") : L.t("Bloquear"), mx0, my0 + 22, 0xFFE53935, () -> setFlag("block", u.id, !u.blocked));
+        }
+    }
+
+    private boolean chatMenu;
+    private long clearAsk;
+
+    private void menuItem(String label, int x, int y, int color, Runnable r) {
+        boolean h = hover(x + 2, y, 96, 20);
+        if (h) round(x + 2, y, 96, 20, 4, 0xFFEFF1F4);
+        text(fit(label, 88), x + 8, y + 6, color);
+        hit(x + 2, y, 96, 20, () -> { tap(); chatMenu = false; r.run(); });
+    }
+
+    private void setFlag(String type, UUID u, boolean on) {
+        CompoundTag o = new CompoundTag();
+        o.putString("u", u.toString());
+        o.putBoolean("on", on);
+        Net.toServer(type, o);
+        String msg = type.equals("mute") ? (on ? L.t("Chat silenciado") : L.t("Ya no está silenciado")) : (on ? L.t("Persona bloqueada") : L.t("Persona desbloqueada"));
+        say(msg);
     }
 
     private void sendMsg() {
@@ -1127,16 +1192,16 @@ public class PhoneScreen extends PixelScreen {
     // ---------- banco ----------
 
     private void drawBank() {
-        appBar("Banco Yogurín", GREEN);
+        appBar(L.t("Banco Yogurín"), GREEN);
         int y = TOP + 26;
         gradient(SX + 8, y, SW - 16, 62, 0xFF1F9D57, 0xFF0F5C33);
         cornerMask(SX + 8, y, SW - 16, 62);
-        text("Saldo disponible", SX + 16, y + 8, 0xCCFFFFFF);
+        text(L.t("Saldo disponible"), SX + 16, y + 8, 0xCCFFFFFF);
         String bal = Money.fmt(ClientData.balance) + " Y";
         textScaled(bal, SX + 16, y + 22, bal.length() > 10 ? 1.5f : 2f, 0xFFFFFFFF, false);
         text("@" + (ClientData.self() == null ? "" : ClientData.self().nick), SX + 16, y + 48, 0xAAFFFFFF);
         y += 70;
-        button("Enviar dinero", SX + 8, y, SW - 16, 18, GREEN, 0xFFFFFFFF, () -> {
+        button(L.t("Enviar dinero"), SX + 8, y, SW - 16, 18, GREEN, 0xFFFFFFFF, () -> {
             transferTo = null;
             inAmount.set("");
             inConcept.set("");
@@ -1147,19 +1212,41 @@ public class PhoneScreen extends PixelScreen {
             center(fit(ClientData.bankError, SW - 16), SX + SW / 2, y, 0xFFE53935);
             y += 12;
         }
-        text("Movimientos", SX + 8, y, INK);
+        text(L.t("Movimientos"), SX + 8, y, INK);
+        if (!ClientData.history.isEmpty()) {
+            boolean confirm = System.currentTimeMillis() - clearAsk < 3000;
+            int tx = SX + SW - 18, ty = y - 2;
+            boolean ht = hover(tx - 2, ty - 1, 14, 13);
+            int tc = confirm ? 0xFFE53935 : ht ? INK : MUTED;
+            // papelera
+            rect(tx, ty + 1, 9, 1, tc);
+            rect(tx + 3, ty, 3, 1, tc);
+            rect(tx + 1, ty + 3, 7, 7, tc);
+            rect(tx + 2, ty + 3, 1, 6, CARD == 0 ? 0 : BG);
+            rect(tx + 4, ty + 3, 1, 6, BG);
+            rect(tx + 6, ty + 3, 1, 6, BG);
+            if (confirm) right(L.t("¿Borrar todo? Pulsa otra vez"), tx - 4, y, 0xFFE53935);
+            hit(tx - 2, ty - 1, 14, 13, () -> {
+                tap();
+                if (System.currentTimeMillis() - clearAsk < 3000) {
+                    Net.toServer("bank_clear", new CompoundTag());
+                    clearAsk = 0;
+                    say(L.t("Movimientos borrados"));
+                } else clearAsk = System.currentTimeMillis();
+            });
+        }
         y += 12;
         int top = y;
         int yy = beginScroll(top);
         List<ClientData.Tx> h = new ArrayList<>(ClientData.history);
         Collections.reverse(h);
-        if (h.isEmpty()) { center("Sin movimientos", SX + SW / 2, yy + 10, MUTED); yy += 30; }
+        if (h.isEmpty()) { center(L.t("Sin movimientos"), SX + SW / 2, yy + 10, MUTED); yy += 30; }
         for (ClientData.Tx x : h) {
             rect(SX + 8, yy, SW - 16, 24, CARD);
             String who;
             UUID o = ClientData.uuid(x.other);
-            if (o != null) who = (x.amount < 0 ? "A @" : "De @") + ClientData.nick(o);
-            else who = x.concept.isEmpty() ? "Cajero" : x.concept;
+            if (o != null) who = (x.amount < 0 ? L.t("A @%s", ClientData.nick(o)) : L.t("De @%s", ClientData.nick(o)));
+            else who = x.concept.isEmpty() ? L.t("Cajero") : x.concept;
             text(fit(who, SW - 80), SX + 13, yy + 4, INK);
             String sub = o != null && !x.concept.isEmpty() ? x.concept : shortAgo(x.time);
             text(fit(sub, SW - 80), SX + 13, yy + 13, MUTED);
@@ -1171,10 +1258,10 @@ public class PhoneScreen extends PixelScreen {
     }
 
     private void drawTransfer() {
-        appBar("Enviar dinero", GREEN);
+        appBar(L.t("Enviar dinero"), GREEN);
         int y = TOP + 24;
         if (transferTo == null) {
-            text("¿A quién se lo envías?", SX + 8, y, MUTED);
+            text(L.t("¿A quién se lo envías?"), SX + 8, y, MUTED);
             int top = y + 12;
             int yy = beginScroll(top);
             for (ClientData.User u : contacts()) {
@@ -1196,25 +1283,25 @@ public class PhoneScreen extends PixelScreen {
         center("@" + ClientData.nick(transferTo), SX + SW / 2, y + 10, MUTED);
         hit(SX, y - 36, SW, 56, () -> transferTo = null);
         y += 26;
-        text("Cantidad (Y)", SX + 10, y, MUTED);
+        text(L.t("Cantidad (Y)"), SX + 10, y, MUTED);
         field(inAmount, SX + 8, y + 10, SW - 16);
         y += 32;
-        text("Concepto", SX + 10, y, MUTED);
+        text(L.t("Concepto"), SX + 10, y, MUTED);
         field(inConcept, SX + 8, y + 10, SW - 16);
         y += 32;
-        text("Tienes " + Money.fmt(ClientData.balance) + " Y", SX + 10, y, MUTED);
+        text(L.t("Tienes %s Y", Money.fmt(ClientData.balance)), SX + 10, y, MUTED);
         y += 14;
-        button("Enviar", SX + 8, y, SW - 16, 18, GREEN, 0xFFFFFFFF, () -> {
+        button(L.t("Enviar"), SX + 8, y, SW - 16, 18, GREEN, 0xFFFFFFFF, () -> {
             long v;
-            try { v = Long.parseLong(inAmount.get()); } catch (Exception e) { say("Escribe una cantidad"); return; }
-            if (v <= 0) { say("Escribe una cantidad"); return; }
-            if (v > ClientData.balance) { say("Saldo insuficiente"); return; }
+            try { v = Long.parseLong(inAmount.get()); } catch (Exception e) { say(L.t("Escribe una cantidad")); return; }
+            if (v <= 0) { say(L.t("Escribe una cantidad")); return; }
+            if (v > ClientData.balance) { say(L.t("Saldo insuficiente")); return; }
             CompoundTag o = new CompoundTag();
             o.putString("to", transferTo.toString());
             o.putLong("v", v);
             o.putString("c", inConcept.get());
             Net.toServer("transfer", o);
-            say("Enviado: " + Money.fmt(v) + " Y");
+            say(L.t("Enviado: %s Y", Money.fmt(v)));
             goBack();
         });
     }
@@ -1222,10 +1309,10 @@ public class PhoneScreen extends PixelScreen {
     // ---------- ajustes ----------
 
     private void drawSettings() {
-        appBar("Ajustes", INK);
+        appBar(L.t("Ajustes"), INK);
         int top = TOP + 19;
         int y = beginScroll(top) + 6;
-        text("Fondo de pantalla", SX + 8, y, MUTED);
+        text(L.t("Fondo de pantalla"), SX + 8, y, MUTED);
         y += 11;
         for (int i = 0; i < WALLS.length; i++) {
             int x = SX + 8 + (i % 3) * 51, yy = y + (i / 3) * 42;
@@ -1238,24 +1325,24 @@ public class PhoneScreen extends PixelScreen {
             hit(x, yy, 48, 40, () -> { tap(); ClientData.wallpaper = Integer.toString(idx); ClientData.save(); });
         }
         y += 86;
-        button("Usar una foto de la galería", SX + 8, y, SW - 16, 16, 0xFFE3E5EA, INK, () -> { pickForWallpaper = true; page = Page.PICK_PHOTO; back.push(Page.SETTINGS); scroll = 0; });
+        button(L.t("Usar una foto de la galería"), SX + 8, y, SW - 16, 16, 0xFFE3E5EA, INK, () -> { pickForWallpaper = true; page = Page.PICK_PHOTO; back.push(Page.SETTINGS); scroll = 0; });
         y += 24;
-        text("Privacidad", SX + 8, y, MUTED);
+        text(L.t("Privacidad"), SX + 8, y, MUTED);
         y += 11;
         boolean hidden = ClientData.me != null && ClientData.hiddenTags.contains(ClientData.me);
-        y = toggle("Ocultar mi nombre", "sobre la cabeza", hidden, y, () -> {
+        y = toggle(L.t("Ocultar mi nombre"), L.t("sobre la cabeza"), hidden, y, () -> {
             CompoundTag o = new CompoundTag();
             o.putBoolean("on", !hidden);
             Net.toServer("hide", o);
         });
         y += 6;
-        text("Avisos", SX + 8, y, MUTED);
+        text(L.t("Avisos"), SX + 8, y, MUTED);
         y += 11;
-        y = toggle("YoguChat", "mensajes nuevos", ClientData.notifChat, y, () -> { ClientData.notifChat = !ClientData.notifChat; ClientData.save(); });
-        y = toggle("Yogugram", "likes, comentarios, seguidores", ClientData.notifSocial, y, () -> { ClientData.notifSocial = !ClientData.notifSocial; ClientData.save(); });
-        y = toggle("Banco", "dinero recibido", ClientData.notifBank, y, () -> { ClientData.notifBank = !ClientData.notifBank; ClientData.save(); });
+        y = toggle("YoguChat", L.t("mensajes nuevos"), ClientData.notifChat, y, () -> { ClientData.notifChat = !ClientData.notifChat; ClientData.save(); });
+        y = toggle("Yogugram", L.t("likes, comentarios, seguidores"), ClientData.notifSocial, y, () -> { ClientData.notifSocial = !ClientData.notifSocial; ClientData.save(); });
+        y = toggle(L.t("Banco"), L.t("dinero recibido"), ClientData.notifBank, y, () -> { ClientData.notifBank = !ClientData.notifBank; ClientData.save(); });
         y += 8;
-        center("Móvil Yogurines · v0.1", SX + SW / 2, y, MUTED);
+        center(L.t("Móvil Yogurines · v0.1"), SX + SW / 2, y, MUTED);
         y += 14;
         endScroll(top, y);
     }
@@ -1343,6 +1430,7 @@ public class PhoneScreen extends PixelScreen {
     @Override
     public boolean keyPressed(int key, int scan, int mods) {
         if (key == GLFW.GLFW_KEY_ESCAPE) {
+            if (chatMenu) { chatMenu = false; return true; }
             if (focus != null && page != Page.CHAT && page != Page.NEW_POST && page != Page.SEARCH) focus = null;
             else goBack();
             return true;
