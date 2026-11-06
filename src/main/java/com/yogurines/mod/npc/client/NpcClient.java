@@ -50,7 +50,7 @@ public final class NpcClient {
                 mc.setScreen(new NpcDialogScreen(n, t.getList("nodes", Tag.TAG_COMPOUND), t.getString("first"), t.getBoolean("shop")));
             }
             case "npc_act_res" -> {
-                if (mc.screen instanceof NpcDialogScreen d) d.actionResult(t.getBoolean("ok"), t.getInt("goto"), t.getString("msg"));
+                if (mc.screen instanceof NpcDialogScreen d) d.actionResult(t.getBoolean("ok"), t.getInt("goto"), t.getString("msg").isEmpty() ? "" : T.t(t.getString("msg"), t.getString("arg")));
             }
             case "npc_shop" -> {
                 NpcEntity n = entity(t.getInt("id"));

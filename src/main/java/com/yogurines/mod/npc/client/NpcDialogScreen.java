@@ -33,7 +33,7 @@ public class NpcDialogScreen extends Screen {
     private int lastSoundAt;
 
     public NpcDialogScreen(NpcEntity npc, ListTag nodes, String first, boolean hasShop) {
-        super(Component.literal("Diálogo"));
+        super(Component.literal(T.t("dialog.title")));
         this.npc = npc;
         this.nodes = nodes;
         this.first = first;
@@ -121,9 +121,8 @@ public class NpcDialogScreen extends Screen {
         g.drawString(font, name, x + 14, y - 10, 0xFFFFFFFF, false);
         if (!l.title.isEmpty()) {
             g.pose().pushPose();
-            g.pose().translate(x + 14 + nw, y - 9, 0);
-            g.pose().scale(0.75f, 0.75f, 1f);
-            g.drawString(font, Nameplate.styled(l.title.toUpperCase(), "tech"), 0, 0, 0xFFFFD84A, true);
+            g.pose().translate(x + 14 + nw, y - 11, 0);
+            g.drawString(font, Nameplate.styled(l.title.toUpperCase(), "tech"), 0, 0, 0xFFFFD84A, false);
             g.pose().popPose();
         }
         // texto
@@ -138,7 +137,7 @@ public class NpcDialogScreen extends Screen {
             int oy = y + h - 10 - Math.max(1, o.size()) * 11;
             if (o.isEmpty()) {
                 boolean blink = (System.currentTimeMillis() / 400) % 2 == 0;
-                g.drawString(font, (blink ? "▶ " : "  ") + "Continuar", tx, y + h - 16, 0xFFCFC6FF, false);
+                g.drawString(font, (blink ? "▶ " : "  ") + T.t("dialog.continue"), tx, y + h - 16, 0xFFCFC6FF, false);
             } else {
                 for (int i = 0; i < o.size(); i++) {
                     int ly = oy + i * 11;
@@ -152,7 +151,7 @@ public class NpcDialogScreen extends Screen {
             g.drawString(font, "…", x + w - 14, y + h - 14, 0xFF8A80B8, false);
         }
         if (!error.isEmpty() && System.currentTimeMillis() - errorTime < 2500)
-            g.drawString(font, error, tx, y - 26, 0xFFFF6A5A, true);
+            g.drawString(font, error, tx, y - 26, 0xFFFF6A5A, false);
         super.render(g, mx, my, pt);
     }
 
@@ -197,7 +196,7 @@ public class NpcDialogScreen extends Screen {
     public void actionResult(boolean ok, int target, String msg) {
         waiting = false;
         if (!ok) {
-            error = msg.isEmpty() ? "No se ha podido" : msg;
+            error = msg.isEmpty() ? T.t("dialog.failed") : msg;
             errorTime = System.currentTimeMillis();
             Minecraft.getInstance().getSoundManager().play(SimpleSoundInstance.forUI(ModSounds.SHOP_ERROR.get(), 1f, 0.7f));
             return;

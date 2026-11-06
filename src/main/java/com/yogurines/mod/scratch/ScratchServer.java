@@ -9,7 +9,7 @@ import java.util.*;
 
 /**
  * Sorteo de los rascas: el servidor decide el premio con probabilidades realistas
- * (devuelven más o menos la mitad de lo jugado) y monta el cartón para que cuadre.
+ * (muchas veces te devuelve lo jugado, casi la mitad nada y los gordos muy difíciles; devuelven ~80%) y monta el cartón para que cuadre.
  */
 public final class ScratchServer {
     public static final long[] PRICE = {1, 10, 100};
@@ -21,9 +21,9 @@ public final class ScratchServer {
             {10, 20, 50, 200, 2000},
             {100, 200, 500, 2500, 10000, 50000}};
     private static final int[][] ODDS_PPM = {
-            {180000, 60000, 20000, 5000, 500},
-            {150000, 50000, 20000, 5000, 500},
-            {140000, 60000, 20000, 4000, 500, 30}};
+            {400000, 80000, 25000, 4000, 300},
+            {380000, 80000, 25000, 4000, 200},
+            {370000, 80000, 25000, 4000, 600, 20}};
 
     /** Símbolos del rasca de oro: moneda, Y, lingote, diamante, corona, fundadores (mismo orden que PRIZES[2]). */
     public static final int SYMBOLS = 6;

@@ -82,11 +82,11 @@ public final class Nameplate {
         if (!l.title.isEmpty()) {
             MutableComponent title = styled(l.title.toUpperCase(Locale.ROOT), "tech");
             ps.pushPose();
-            float ty = ribbon ? ny + 9.5f : ny + 9.6f + (l.bg.equals("plate") ? 1.5f : 0f);
+            // fuente pixel nítida, sin sombra y sin escalar (la escala la emborronaba)
+            float ty = ribbon ? ny + 8f : ny + 8f + (l.bg.equals("plate") ? 2f : 0f);
             ps.translate(0, ty, 0);
-            ps.scale(0.7f, 0.7f, 0.7f);
             int tw = font.width(title);
-            font.drawInBatch(title, -tw / 2f, 0, 0xFFFFD84A, true, ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, FULL);
+            font.drawInBatch(title, -tw / 2f, 0, 0xFFFFD84A, false, ps.last().pose(), buf, Font.DisplayMode.NORMAL, 0, FULL);
             ps.popPose();
         }
 

@@ -28,7 +28,7 @@ public class NpcWandItem extends Item {
         if (hand != InteractionHand.MAIN_HAND) return InteractionResultHolder.pass(s);
         if (!level.isClientSide && player instanceof ServerPlayer sp) {
             if (NpcServer.isAdmin(sp)) NpcServer.sendTemplates(sp, true);
-            else sp.displayClientMessage(Component.literal("Solo los admins (OP) pueden usar el modificador").withStyle(ChatFormatting.RED), true);
+            else sp.displayClientMessage(Component.translatable("yogurines.npc.wandOnlyOp").withStyle(ChatFormatting.RED), true);
         }
         return InteractionResultHolder.sidedSuccess(s, level.isClientSide);
     }

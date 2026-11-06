@@ -33,7 +33,7 @@ public class NpcShopScreen extends Screen {
     private ItemStack hoverStack = ItemStack.EMPTY;
 
     public NpcShopScreen(NpcEntity npc, CompoundTag t) {
-        super(Component.literal("Tienda"));
+        super(Component.literal(T.t("shop.title")));
         this.npc = npc;
         update(t);
         msg = "";
@@ -49,7 +49,7 @@ public class NpcShopScreen extends Screen {
         if (sel >= offers.size()) sel = Math.max(0, offers.size() - 1);
         String m = t.getString("msg");
         if (!m.isEmpty()) {
-            msg = m;
+            msg = T.t(m, t.getString("arg"));
             msgOk = t.getBoolean("ok");
             msgTime = System.currentTimeMillis();
             PixelSound.play(msgOk ? ModSounds.SHOP_BUY.get() : ModSounds.SHOP_ERROR.get(), 1f, 0.8f);
@@ -95,7 +95,7 @@ public class NpcShopScreen extends Screen {
         // cabecera
         String title = "> " + (name.isEmpty() ? "NPC" : name).toUpperCase(Locale.ROOT).replace(' ', '_') + ".exe";
         g.drawString(font, Nameplate.styled(title, "tech"), x + 8, y + 8, G2, false);
-        String bal = useBank ? "BANCO Y" + Money.fmt(bank) : "EFECTIVO Y" + Money.fmt(cash);
+        String bal = T.t(useBank ? "shop.bank" : "shop.cash").toUpperCase(Locale.ROOT) + " Y" + Money.fmt(useBank ? bank : cash);
         Component balC = Nameplate.styled(bal, "tech");
         g.drawString(font, balC, x + w - 8 - font.width(balC), y + 8, G2, false);
         for (int dx = x + 6; dx < x + w - 6; dx += 4) g.fill(dx, y + 21, dx + 2, y + 22, 0x8839FF7A);
@@ -103,7 +103,7 @@ public class NpcShopScreen extends Screen {
         // ofertas
         int vis = visibleRows();
         scroll = Math.max(0, Math.min(scroll, Math.max(0, offers.size() - vis)));
-        if (offers.isEmpty()) g.drawCenteredString(font, "Esta tienda está vacía", x + w / 2, rowsTop() + 30, G2);
+        if (offers.isEmpty()) centered(g, Component.literal(T.t("shop.empty")), x + w / 2, rowsTop() + 30, G2);
         for (int r = 0; r < vis && r + scroll < offers.size(); r++) {
             int i = r + scroll;
             CompoundTag o = offers.getCompound(i);
@@ -121,7 +121,7 @@ public class NpcShopScreen extends Screen {
             int maxLabel = w - 150;
             if (font.width(label) > maxLabel) label = font.plainSubstrByWidth(label, maxLabel - 6) + "…";
             g.drawString(font, label, x + 30, ry + 2, 0xFFCFFFE0, false);
-            g.drawString(font, Nameplate.styled(sell ? "COMPRAR" : "VENDER", "tech"), x + 30, ry + 11, sell ? 0xFF39FF7A : 0xFFFFD84A, false);
+            g.drawString(font, Nameplate.styled(T.t(sell ? "shop.buy" : "shop.sell").toUpperCase(Locale.ROOT), "tech"), x + 30, ry + 11, sell ? 0xFF39FF7A : 0xFFFFD84A, false);
             // precio y stock
             int max = o.getInt("max"), stock = o.getInt("stock"), left = o.getInt("left");
             String st = max < 0 ? "[∞]" : "[" + stock + "]";
@@ -148,28 +148,32 @@ public class NpcShopScreen extends Screen {
 
         // pie: interruptor y botón
         int fy = y + h - 24;
-        g.drawString(font, Nameplate.styled("[ESC] SALIR", "tech"), x + 8, fy + 6, 0xFF6FCF8F, false);
+        g.drawString(font, Nameplate.styled(T.t("shop.exit").toUpperCase(Locale.ROOT), "tech"), x + 8, fy + 6, 0xFF6FCF8F, false);
         int tx = x + 78, tw1 = 56, tw2 = 50;
         boolean showPay = !offers.isEmpty() && offers.getCompound(sel).getBoolean("payY");
         if (showPay) {
             border(g, tx, fy, tw1 + tw2, 18, G);
             g.fill(useBank ? tx + tw1 : tx + 1, fy + 1, useBank ? tx + tw1 + tw2 - 1 : tx + tw1, fy + 17, G);
-            g.drawCenteredString(font, Nameplate.styled("EFECTIVO", "tech"), tx + tw1 / 2, fy + 5, useBank ? G2 : 0xFF04140A);
-            g.drawCenteredString(font, Nameplate.styled("BANCO", "tech"), tx + tw1 + tw2 / 2, fy + 5, useBank ? 0xFF04140A : G2);
+            centered(g, Nameplate.styled(T.t("shop.cash").toUpperCase(Locale.ROOT), "tech"), tx + tw1 / 2, fy + 6, useBank ? G2 : 0xFF04140A);
+            centered(g, Nameplate.styled(T.t("shop.bank").toUpperCase(Locale.ROOT), "tech"), tx + tw1 + tw2 / 2, fy + 6, useBank ? 0xFF04140A : G2);
         }
         boolean sell = offers.isEmpty() || !"buy".equals(offers.getCompound(sel).getString("mode"));
-        Component btn = Nameplate.styled(sell ? "EJECUTAR COMPRA" : "EJECUTAR VENTA", "tech");
+        Component btn = Nameplate.styled(T.t(sell ? "shop.doBuy" : "shop.doSell").toUpperCase(Locale.ROOT), "tech");
         int bw = font.width(btn) + 16, bx = x + w - 8 - bw;
         boolean bh = in(mx, my, bx, fy, bw, 18);
         if (bh) g.fill(bx, fy, bx + bw, fy + 18, 0x3339FF7A);
         border(g, bx, fy, bw, 18, G);
-        g.drawString(font, btn, bx + 8, fy + 5, G, false);
+        g.drawString(font, btn, bx + 8, fy + 6, G, false);
         if (!msg.isEmpty() && System.currentTimeMillis() - msgTime < 2600) {
             Component mc = Nameplate.styled(msg.toUpperCase(Locale.ROOT), "tech");
-            g.drawCenteredString(font, mc, x + w / 2, fy - 11, msgOk ? G : 0xFFFF6A5A);
+            centered(g, mc, x + w / 2, fy - 11, msgOk ? G : 0xFFFF6A5A);
         }
         super.render(g, mx, my, pt);
         if (!hoverStack.isEmpty()) g.renderTooltip(font, hoverStack, mx, my);
+    }
+
+    private void centered(GuiGraphics g, Component c, int cx, int y, int color) {
+        g.drawString(font, c, cx - font.width(c) / 2, y, color, false);
     }
 
     private static void border(GuiGraphics g, int x, int y, int w, int h, int c) {
@@ -206,7 +210,7 @@ public class NpcShopScreen extends Screen {
         }
         if (!offers.isEmpty()) {
             boolean sell = !"buy".equals(offers.getCompound(sel).getString("mode"));
-            int bw = font.width(Nameplate.styled(sell ? "EJECUTAR COMPRA" : "EJECUTAR VENTA", "tech")) + 16;
+            int bw = font.width(Nameplate.styled(T.t(sell ? "shop.doBuy" : "shop.doSell").toUpperCase(Locale.ROOT), "tech")) + 16;
             if (in(mx, my, x + w - 8 - bw, fy, bw, 18)) { buy(); return true; }
         }
         return super.mouseClicked(mx, my, button);

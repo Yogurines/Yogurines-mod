@@ -34,7 +34,7 @@ public final class NpcServer {
     }
 
     private static void deny(ServerPlayer p) {
-        p.displayClientMessage(Component.literal("Solo los admins (OP) pueden editar NPCs").withStyle(ChatFormatting.RED), true);
+        p.displayClientMessage(Component.translatable("yogurines.npc.onlyOp").withStyle(ChatFormatting.RED), true);
     }
 
     public static Path skinDir() {
@@ -76,7 +76,7 @@ public final class NpcServer {
                 String name = clean(t.getString("name"), 32);
                 if (n == null || name.isEmpty()) return;
                 NpcTemplates.get(p.server).put(name, n.templateTag());
-                p.displayClientMessage(Component.literal("Plantilla guardada: " + name).withStyle(ChatFormatting.GREEN), true);
+                p.displayClientMessage(Component.translatable("yogurines.npc.tplSaved", name).withStyle(ChatFormatting.GREEN), true);
                 sendTemplates(p, false);
             }
             case "npc_tpl_del" -> {
@@ -90,7 +90,7 @@ public final class NpcServer {
                 if (!(s.getItem() instanceof NpcWandItem)) return;
                 String name = t.getString("name");
                 if (name.isEmpty()) s.removeTagKey("tpl"); else s.getOrCreateTag().putString("tpl", name);
-                p.displayClientMessage(Component.literal(name.isEmpty() ? "Modificador: NPC nuevo" : "Modificador: plantilla " + name).withStyle(ChatFormatting.GREEN), true);
+                p.displayClientMessage((name.isEmpty() ? Component.translatable("yogurines.npc.wandBlank") : Component.translatable("yogurines.npc.wandTpl", name)).withStyle(ChatFormatting.GREEN), true);
             }
             case "npc_skinfile" -> sendSkinFile(p, t.getString("name"));
             case "npc_shop_open" -> {
@@ -183,7 +183,7 @@ public final class NpcServer {
         if (t.contains("equip")) n.setEquip(t.getList("equip", Tag.TAG_COMPOUND));
         if (t.getBoolean("homeHere")) n.setHome(n.blockPosition());
         else if (n.home() == null) n.setHome(n.blockPosition());
-        p.displayClientMessage(Component.literal("NPC guardado").withStyle(ChatFormatting.GREEN), true);
+        p.displayClientMessage(Component.translatable("yogurines.npc.saved").withStyle(ChatFormatting.GREEN), true);
     }
 
     public static void sendTemplates(ServerPlayer p, boolean open) {
@@ -283,7 +283,7 @@ public final class NpcServer {
                     ok = true;
                 } else ok = false;
                 res.putBoolean("ok", ok);
-                if (!ok) res.putString("msg", "No tienes " + Money.fmt(v) + " Y");
+                if (!ok) { res.putString("msg", "dialog.noMoney"); res.putString("arg", Money.fmt(v)); }
             }
             default -> res.putBoolean("ok", true);
         }
@@ -344,13 +344,13 @@ public final class NpcServer {
         long now = p.level().getGameTime();
         restock(o, now);
         ItemStack item = ItemStack.of(o.getCompound("item"));
-        if (item.isEmpty()) { sendShop(p, n, false, "Oferta vacía", false); return; }
+        if (item.isEmpty()) { sendShop(p, n, false, "shop.err.empty", false); return; }
         int max = o.getInt("max"), stock = o.getInt("stock");
-        if (max >= 0 && stock <= 0) { sendShop(p, n, false, "Agotado", false); return; }
+        if (max >= 0 && stock <= 0) { sendShop(p, n, false, "shop.err.soldOut", false); return; }
         int limit = o.getInt("limit");
         CompoundTag used = o.getCompound("used");
         String me = p.getStringUUID();
-        if (limit > 0 && used.getInt(me) >= limit) { sendShop(p, n, false, "Has llegado al límite", false); return; }
+        if (limit > 0 && used.getInt(me) >= limit) { sendShop(p, n, false, "shop.err.limit", false); return; }
         boolean payY = o.getBoolean("payY");
         long price = Math.max(0, o.getLong("price"));
         ItemStack priceItem = ItemStack.of(o.getCompound("priceItem"));
@@ -361,18 +361,18 @@ public final class NpcServer {
             // el NPC vende: el jugador paga
             if (payY) {
                 if (bank) {
-                    if (d.bal(p.getUUID()) < price) { sendShop(p, n, false, "Saldo insuficiente en el banco", false); return; }
+                    if (d.bal(p.getUUID()) < price) { sendShop(p, n, false, "shop.err.bank", false); return; }
                     d.addTx(p.getUUID(), -price, "", "Compra a " + npcName);
                     ServerLogic.sendSnap(p);
-                } else if (!Cash.take(p, price)) { sendShop(p, n, false, "No llevas suficiente efectivo", false); return; }
+                } else if (!Cash.take(p, price)) { sendShop(p, n, false, "shop.err.cash", false); return; }
             } else {
-                if (priceItem.isEmpty() || Cash.countItem(p, priceItem) < priceItem.getCount()) { sendShop(p, n, false, "Te falta lo que pide", false); return; }
+                if (priceItem.isEmpty() || Cash.countItem(p, priceItem) < priceItem.getCount()) { sendShop(p, n, false, "shop.err.price", false); return; }
                 Cash.takeItem(p, priceItem, priceItem.getCount());
             }
             Cash.giveItem(p, item);
         } else {
             // el NPC compra: el jugador entrega el objeto
-            if (Cash.countItem(p, item) < item.getCount()) { sendShop(p, n, false, "No tienes ese objeto", false); return; }
+            if (Cash.countItem(p, item) < item.getCount()) { sendShop(p, n, false, "shop.err.noItem", false); return; }
             Cash.takeItem(p, item, item.getCount());
             if (payY) {
                 if (bank) {
@@ -384,7 +384,7 @@ public final class NpcServer {
         if (max >= 0) o.putInt("stock", stock - 1);
         if (limit > 0) { used.putInt(me, used.getInt(me) + 1); o.put("used", used); }
         p.containerMenu.broadcastChanges();
-        sendShop(p, n, false, sell ? "¡Compra hecha!" : "¡Vendido!", true);
+        sendShop(p, n, false, sell ? "shop.ok.bought" : "shop.ok.sold", true);
     }
 
     private NpcServer() {}
