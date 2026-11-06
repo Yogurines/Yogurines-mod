@@ -1,0 +1,19 @@
+{
+  "itemGroup.yogurines": "Yogurines",
+  "item.yogurines.phone": "Móvil",
+  "item.yogurines.phone.soon": "El móvil se está montando. ¡Pronto tendrá apps!",
+  "block.yogurines.atm": "Cajero automático",
+  "block.yogurines.atm.soon": "El cajero estará operativo muy pronto.",
+  "item.yogurines.coin_1": "Moneda de 1 yogurín",
+  "tooltip.yogurines.value": "Valor: %s yogurines",
+  "tooltip.yogurines.stack_value": "En total: %s yogurines",
+  "subtitles.yogurines.phone.message_received": "Mensaje recibido",
+  "subtitles.yogurines.bank.transfer_sent": "Transferencia enviada",
+  "item.yogurines.note_5": "Billete de 5 yogurines",
+  "item.yogurines.note_10": "Billete de 10 yogurines",
+  "item.yogurines.note_20": "Billete de 20 yogurines",
+  "item.yogurines.note_50": "Billete de 50 yogurines",
+  "item.yogurines.note_100": "Billete de 100 yogurines",
+  "item.yogurines.note_200": "Billete de 200 yogurines",
+  "item.yogurines.note_500": "Billete de 500 yogurines"
+}

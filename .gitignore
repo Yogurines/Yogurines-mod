@@ -1,0 +1,13 @@
+# gradle
+build/
+.gradle/
+out/
+run/
+# ide
+.idea/
+*.iml
+.vscode/
+bin/
+.classpath
+.project
+.settings/

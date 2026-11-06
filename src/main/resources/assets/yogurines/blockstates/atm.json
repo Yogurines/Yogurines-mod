@@ -1,0 +1,31 @@
+{
+  "variants": {
+    "facing=north,half=lower": {
+      "model": "yogurines:block/atm"
+    },
+    "facing=north,half=upper": {
+      "model": "yogurines:block/atm_upper"
+    },
+    "facing=east,half=lower": {
+      "model": "yogurines:block/atm",
+      "y": 90
+    },
+    "facing=east,half=upper": {
+      "model": "yogurines:block/atm_upper"
+    },
+    "facing=south,half=lower": {
+      "model": "yogurines:block/atm",
+      "y": 180
+    },
+    "facing=south,half=upper": {
+      "model": "yogurines:block/atm_upper"
+    },
+    "facing=west,half=lower": {
+      "model": "yogurines:block/atm",
+      "y": 270
+    },
+    "facing=west,half=upper": {
+      "model": "yogurines:block/atm_upper"
+    }
+  }
+}

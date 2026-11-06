@@ -1,0 +1,14 @@
+{
+  "phone.message_received": {
+    "subtitle": "subtitles.yogurines.phone.message_received",
+    "sounds": [
+      "yogurines:phone/message_received"
+    ]
+  },
+  "bank.transfer_sent": {
+    "subtitle": "subtitles.yogurines.bank.transfer_sent",
+    "sounds": [
+      "yogurines:bank/transfer_sent"
+    ]
+  }
+}
